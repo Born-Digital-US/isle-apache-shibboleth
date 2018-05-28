@@ -1,35 +1,30 @@
-FROM ubuntu:14.04 AS ffmpeg_base
+FROM ubuntu:14.04 as ffmpeg_base
 
 ##
-LABEL "io.github.islandora-collaboration-group.name"="isle-apache"
-LABEL "io.github.islandora-collaboration-group.description"="ISLE Apache container, responsible for serving Drupal and Islandora's presentation layer!\
-A default site called isle.localdomain is prepared for those looking to explore Islandora for the first time!"
-LABEL "io.github.islandora-collaboration-group.license"="Apache-2.0"
-LABEL "io.github.islandora-collaboration-group.vcs-url"="git@github.com:Islandora-Collaboration-Group/ISLE.git"
-LABEL "io.github.islandora-collaboration-group.vendor"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com"
-LABEL "io.github.islandora-collaboration-group.maintainer"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com"
+LABEL "io.github.islandora-collaboration-group.name"="isle-apache" \
+      "io.github.islandora-collaboration-group.description"="ISLE Apache container, responsible for serving Drupal and Islandora's presentation layer!\
+A default site called isle.localdomain is prepared for those looking to explore Islandora for the first time!" \
+      "io.github.islandora-collaboration-group.license"="Apache-2.0" \
+      "io.github.islandora-collaboration-group.vcs-url"="git@github.com:Islandora-Collaboration-Group/ISLE.git" \
+      "io.github.islandora-collaboration-group.vendor"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
+      "io.github.islandora-collaboration-group.maintainer"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com"
 ##
 
 ###
 # https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-
-###
-# Update apt
-RUN apt-get update
-
-###
-# Add software to provide add-apt-repository
-RUN apt-get install -y software-properties-common \
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get update && \
+    # Add software to provide add-apt-repository
+    apt-get install -y software-properties-common \
     python-software-properties
 
-
+## DEPRECATE vvv
 # Build, configure and install ffmpeg, ffmpeg2theora and ghostscript
-RUN add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty main multiverse" \
+RUN add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty main multiverse" && \
     add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty-updates main multiverse" && \
     add-apt-repository -y ppa:mc3man/fdkaac-encoder && \
     apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl \
     wget \
     git \
     zip \
@@ -82,7 +77,7 @@ RUN add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty main m
     libmp3lame-dev \
     libopenjpeg-dev \
     libfdk-aac1 \
-    fdkaac-encoder \
+    fdkaac-encoder && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     cd /tmp && \
@@ -105,50 +100,50 @@ RUN add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty main m
     mv -v /opt/ffmpeg2theora-0.29.linux64.bin /usr/bin/ffmpeg2theora && \
     mkdir -p /tmp/build && \
     cd /tmp/build && \
-    wget http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.05.tar.gz && \
-    tar -xzf ghostscript-9.05.tar.gz && \
-    rm ghostscript-9.05.tar.gz && \
+    wget -O ghostscript-9.05.tgz https://sourceforge.net/projects/ghostscript/files/GPL%20Ghostscript/9.05/ghostscript-9.05.tgz/download# && \
+    tar -xzf ghostscript-9.05.tgz && \
+    rm ghostscript-9.05.tgz && \
     cd ghostscript-9.05 && \
     ./configure --without-x && \
     /usr/bin/make && \
     /usr/bin/make install && \
     cd / && \
     rm -rf /tmp/build
+## DEPRECATE ^^^
 
-FROM ubuntu:14.04
+FROM ubuntu:14.04 as final
 
+# ## @todo: remove this, `apt-get ffmpeg` on Ubuntu > 16.04...
 COPY --from=ffmpeg_base /usr/bin/ffmpeg2theora /usr/bin/ffmpeg2theora
 COPY --from=ffmpeg_base /usr/local/lib /usr/local/lib
 COPY --from=ffmpeg_base /usr/local/bin /usr/local/bin
 COPY --from=ffmpeg_base /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
 COPY --from=ffmpeg_base /usr/bin/x264 /usr/bin/x264
 
-###
 # https://github.com/phusion/baseimage-docker/issues/58
-RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-
-###
-# Update apt
-RUN apt-get update \
-    apt-get install --no-install-recommends -y software-properties-common && \
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get update && \
+    # Add software to provide add-apt-repository
+    apt-get install -y software-properties-common \
     python-software-properties \
-    language-pack-en-base
-
-RUN cd /etc/ \
-    sudo ldconfig && \
-    groupadd -g 10000 islandora && \
-    useradd -m -d /home/islandora -s /bin/bash -u 10000 -g 10000 islandora && \
+    language-pack-en-base && \
+    ## Prepare APT entirely.
+    echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 select true' | debconf-set-selections && \
+    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list && \
+    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && \
     add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty main multiverse" && \
     add-apt-repository -y "deb http://us.archive.ubuntu.com/ubuntu trusty-updates main multiverse" && \
     LC_ALL=en_US.UTF-8 add-apt-repository -y ppa:ondrej/php && \
     LC_ALL=en_US.UTF-8 add-apt-repository -y ppa:ondrej/apache2 && \
-    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list && \
-    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list && \
-    echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && \
-    apt-get update && \
+    apt-get update
+
+RUN cd /etc/ && \
+    sudo ldconfig && \
+    groupadd -g 10000 islandora && \
+    useradd -m -d /home/islandora -s /bin/bash -u 10000 -g 10000 islandora && \
     apt-mark hold ghostscript && \
-    apt-get install --no-install-recommends -y && \
+    apt-get install --no-install-recommends -y \
     curl \
     nano \
     emacs24-nox \
@@ -232,6 +227,7 @@ RUN cd /etc/ \
     tesseract-ocr-rus \
     leptonica-progs \
     libleptonica-dev \
+    wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     cd /opt && \
@@ -244,27 +240,21 @@ RUN cd /etc/ \
     echo "/opt/adore-djatoka-1.1/lib/Linux-x86-64" > /etc/ld.so.conf.d/kdu_libs.conf && \
     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
     chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
-    touch /etc/apache2/conf-available/servername.conf && \
-    echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && \
+    # touch /etc/apache2/conf-available/servername.conf && \
+    # echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && \
     touch /etc/cron.d/tmpreaper-cron && \
     echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" /etc/cron.d/tmpreaper-cron && \
     chmod 0644 /etc/cron.d/tmpreaper-cron
 
-COPY envinit.sh /opt/adore-djatoka-1.1/bin/envinit.sh
-COPY sites-available/isle_localdomain_ssl.conf /etc/apache2/sites-available/isle_localdomain_ssl.conf
-COPY sites-available/isle_localdomain.conf /etc/apache2/sites-available/isle_localdomain.conf
-COPY ssl-certs /certs
-
 ###
 # Set up environmental variables for tomcat & dependencies installation
-
 ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
     JRE_HOME=/usr/lib/jvm/java-8-oracle/jre \
     PATH=$PATH:$HOME/.composer/vendor/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/jre/bin \
     KAKADU_LIBRARY_PATH=/opt/adore-djatoka-1.1/lib/Linux-x86-64 \
     KAKADU_HOME=/opt/adore-djatoka-1.1/lib/Linux-x86-64
 
-RUN mkdir -p /tmp/build \
+RUN mkdir -p /tmp/build && \
     cd /tmp/build && \
     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
     php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
@@ -316,16 +306,9 @@ RUN mkdir -p /tmp/build \
     sed -i 's/post_max_size = .*/post_max_size = '2000M'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/max_input_time = .*/max_input_time = '-1'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/max_execution_time = .*/max_execution_time = '0'/' /etc/php/5.6/apache2/php.ini && \
-    a2enconf servername && \
+    # a2enconf servername && \
     mkdir -p /var/www/html && \
     chown islandora:www-data /var/www/html && \
-    chmod 0644 /etc/apache2/sites-available/isle_localdomain_ssl.conf && \
-    chmod 0644 /etc/apache2/sites-available/isle_localdomain.conf && \
-    a2ensite isle_localdomain_ssl.conf && \
-    a2ensite isle_localdomain.conf && \
-    a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect xml2enc && \
-    a2dissite 000-default && \
-    a2dissite default-ssl && \
     chmod -R 777 /var/www/html && \
     chown -R islandora:www-data /var/www/html && \
     chown islandora:www-data /usr/local/bin/ffmpeg && \
@@ -334,14 +317,18 @@ RUN mkdir -p /tmp/build \
     chown islandora:www-data /usr/local/bin/qt-faststart && \
     chown islandora:www-data /usr/bin/lame && \
     chown islandora:www-data /usr/bin/x264 && \
-    chown islandora:www-data /usr/bin/xtractprotos && \
-    mkdir -p /tmp/isle_drupal_build_tools
+    chown islandora:www-data /usr/bin/xtractprotos
 
-COPY isle_drupal_build_tools/drupal.drush.make /tmp/isle_drupal_build_tools/drupal.drush.make
-COPY isle_drupal_build_tools/islandora.drush.make /tmp/isle_drupal_build_tools/islandora.drush.make
-COPY isle_drupal_build_tools/install_isle_ld_site.sh /tmp/isle_drupal_build_tools/install_isle_ld_site.sh
-COPY isle_drupal_build_tools/fix-permissions.sh /tmp/isle_drupal_build_tools/fix-permissions.sh
-COPY settings.php /tmp/settings.php
+COPY rootfs /
+
+## FINALIZE APACHE2, a2dis, a2en{site,mod} -> sites and mod remoteip
+RUN chmod 0644 /etc/apache2/sites-available/isle_localdomain_ssl.conf && \
+    chmod 0644 /etc/apache2/sites-available/isle_localdomain.conf && \
+    a2ensite isle_localdomain_ssl.conf && \
+    a2ensite isle_localdomain.conf && \
+    a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect xml2enc && \
+    a2dissite 000-default && \
+    a2dissite default-ssl
 
 VOLUME /var/www/html
 
