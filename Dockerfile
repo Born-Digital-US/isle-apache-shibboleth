@@ -254,6 +254,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
     KAKADU_LIBRARY_PATH=/opt/adore-djatoka-1.1/lib/Linux-x86-64 \
     KAKADU_HOME=/opt/adore-djatoka-1.1/lib/Linux-x86-64
 
+COPY rootfs /
+
+# Finalize... (uhg --)
 RUN mkdir -p /tmp/build && \
     cd /tmp/build && \
     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
@@ -317,13 +320,7 @@ RUN mkdir -p /tmp/build && \
     chown islandora:www-data /usr/local/bin/qt-faststart && \
     chown islandora:www-data /usr/bin/lame && \
     chown islandora:www-data /usr/bin/x264 && \
-    chown islandora:www-data /usr/bin/xtractprotos
-
-COPY rootfs /
-
-## FINALIZE APACHE2, a2dis, a2en{site,mod} -> sites and mod remoteip
-RUN chmod 0644 /etc/apache2/sites-available/isle_localdomain_ssl.conf && \
-    chmod 0644 /etc/apache2/sites-available/isle_localdomain.conf && \
+    chown islandora:www-data /usr/bin/xtractprotos && \
     a2ensite isle_localdomain_ssl.conf && \
     a2ensite isle_localdomain.conf && \
     a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect xml2enc && \
