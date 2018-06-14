@@ -1,25 +1,27 @@
 #!/bin/bash
 
-echo "Changing directory to tmp/isle_drupal_build_tools"
-cd /tmp/isle_drupal_build_tools || exit
+# 
+# @TODO Discuss with M.McFate on build_tools updates from builds.
+#
+
+# echo "Changing directory to tmp/isle_drupal_build_tools"
+# cd /tmp/isle_drupal_build_tools || exit
 
 echo "Using Drush makefile to create sample Drupal site within /tmp/drupal_install"
-/usr/local/bin/drush make --prepare-install /tmp/isle_drupal_build_tools/drupal.drush.make /tmp/drupal_install
+/usr/local/bin/drush make --prepare-install /utility-scripts/isle_drupal_build_tools/isle-drush_make/drupal.drush.make /tmp/drupal_install
 
 echo "Using Islandora makefile for Islandora Modules for sample Drupal site within /tmp/drupal_install"
-/usr/local/bin/drush make --no-core /tmp/isle_drupal_build_tools/islandora.drush.make /tmp/drupal_install
+/usr/local/bin/drush make --no-core /utility-scripts/isle_drupal_build_tools/isle-drush_make/islandora.drush.make /tmp/drupal_install
 
-echo "Remove blank settings.php from /tmp/drupal_install"
-rm -f /tmp/drupal_install/sites/default/settings.php
+# @TODO pass by var
+echo "Update settings.php with ISLE default"
+cp -fv /utility-scripts/isle_drupal_build_tools/isle-drush_make/settings.php /tmp/drupal_install/sites/default/settings.php
 
-echo "Remove basic ubuntu index.html page"
-rm -f /var/www/html/index.html
+echo "Moving ..."
+mv -v /tmp/drupal_install/. /var/www/html/
 
-echo "Copy /tmp/drupal_install contents to /var/www/html"
-cp -rv /tmp/drupal_install/. /var/www/html/
-
-echo "Copy /tmp/settings.php to /var/www/html/sites/default/settings.php"
-cp -v /tmp/settings.php /var/www/html/sites/default/
+# echo "Copy /tmp/settings.php to /var/www/html/sites/default/settings.php"
+# cp -v /tmp/settings.php /var/www/html/sites/default/
 
 echo "Fix Openseadragon & Change directory to /var/www/html/sites/all/libraries"
 cd /var/www/html/sites/all/libraries || exit
@@ -44,7 +46,7 @@ cd /var/www/html/sites/all/modules || exit
 
 ## Site install
 echo "Installing Drupal Site"
-/usr/local/bin/drush site-install -y --account-name=isle_localdomain_admin --account-pass=isle_localdomain_adminpw2018 --account-mail=admin@isle.localdomain --site-name="ISLE.localdomain"
+/usr/local/bin/drush site-install -y --account-name=isle --account-pass=isle --account-mail=admin@isle.localdomain --site-name="ISLE.localdomain"
 
 ## Drush vset of all settings
 echo "Drush vset of Drupal Site configurations"
@@ -173,7 +175,6 @@ echo "Enable module script finished!"
 
 # Fix site directory permissions
 echo "Running fix-permissions script"
-/bin/bash /tmp/isle_drupal_build_tools/fix-permissions.sh --drupal_path=/var/www/html --drupal_user=islandora --httpd_group=www-data
+/bin/bash /utility-scripts/isle_drupal_build_tools/drupal/fix-permissions.sh --drupal_path=/var/www/html --drupal_user=islandora --httpd_group=www-data
 
-echo "Drush script finished! ...exiting"
 exit

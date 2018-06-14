@@ -321,11 +321,11 @@ RUN mkdir -p /tmp/build && \
     chown islandora:www-data /usr/bin/lame && \
     chown islandora:www-data /usr/bin/x264 && \
     chown islandora:www-data /usr/bin/xtractprotos && \
+    a2dissite 000-default && \
+    a2dissite default-ssl && \
     a2ensite isle_localdomain_ssl.conf && \
     a2ensite isle_localdomain.conf && \
-    a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect xml2enc && \
-    a2dissite 000-default && \
-    a2dissite default-ssl
+    a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc
 
 VOLUME /var/www/html
 
