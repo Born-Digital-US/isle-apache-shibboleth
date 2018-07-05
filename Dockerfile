@@ -133,7 +133,7 @@ RUN APACHE_PACKAGES="apache2 \
     # touch /etc/apache2/conf-available/servername.conf && \
     # echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && \
     touch /etc/cron.d/tmpreaper-cron && \
-    echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" /etc/cron.d/tmpreaper-cron && \
+    echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" | tee /etc/cron.d/tmpreaper-cron && \
     chmod 0644 /etc/cron.d/tmpreaper-cron
 
 ###
