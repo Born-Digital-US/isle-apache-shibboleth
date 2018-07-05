@@ -1,5 +1,5 @@
 ARG BASE=ubuntu:bionic
-FROM $BASE as s6-overlay-base
+FROM $BASE as isle-apache-base
 
 ##
 LABEL "io.github.islandora-collaboration-group.name"="isle-apache" \
@@ -16,50 +16,59 @@ ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.4.0/s6
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
     rm /tmp/s6-overlay-amd64.tar.gz
 
-ENV INITRD=no
+ENV INITRD=no \
+    ISLANDORA_USER=${ISLANDORA_USER:-islandora}
 
+## General Dependencies
 RUN GEN_DEP_PACKS="software-properties-common \
     language-pack-en-base \
+    tmpreaper \
+    dnsutils \
     cron \
     wget \
-    dnsutils \
     curl \
-    nano \
-    vim \
     rsync\
     git \
     zip \
     unzip \
-    bzip2" && \
-    ## Prepare APT entirely.
-    apt-get update && \
+    bzip2 \
+    openssl \
+    openssh-client \
+    mysql-client" && \
     echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections && \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update && \
     apt-get install --no-install-recommends -y $GEN_DEP_PACKS && \
+    ## Prepare APT entirely for the remainder of the install.
     add-apt-repository -y ppa:webupd8team/java && \
-    add-apt-repository -y ppa:ondrej/php && \
+    ## Apache && PHP 5.6 from ondrej
     add-apt-repository -y ppa:ondrej/apache2 && \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+    add-apt-repository -y ppa:ondrej/php && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en
 
-FROM s6-overlay-base as final
+## Java
+RUN JAVA_PACKAGES="oracle-java8-installer \
+    oracle-java8-set-default" && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y $JAVA_PACKAGES && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/oracle-jdk8-installer
+
+# FINAL
+FROM isle-apache-base as final
+## Apache, PHP, Islandora Dependencies.
+## Per @g7morris, ghostscript from repo is a go.
 RUN APACHE_PACKAGES="apache2 \
-    oracle-java8-installer \
-    oracle-java8-set-default \
-    openssh-client \
-    tmpreaper \
-    mysql-client \
     python-mysqldb \
-    libmysqlclient-dev \
-    openssl \
     libxml2-dev \
-    php5.6  \
     libapache2-mod-php5.6 \
     libcurl3-openssl-dev \
+    php5.6 \
     php5.6-cli \
     php5.6-json \
     php5.6-common \
@@ -79,18 +88,20 @@ RUN APACHE_PACKAGES="apache2 \
     php5.6-zip \
     php5.6-bcmath \
     php5.6-intl \
+    php5.6-imagick \
     libpng-dev \
     libjpeg-dev \
     libtiff-dev \
     imagemagick \
     ffmpeg \
-    php5.6-imagick \
+    ffmpeg2theora \
+    libavcodec-extra \
+    xpdf \
+    x264 \
     poppler-utils \
     bibutils \
     libimage-exiftool-perl \
-    xpdf \
     lame \
-    x264 \
     libpng-dev \
     libjpeg-dev \
     libtiff-dev \
@@ -114,12 +125,12 @@ RUN APACHE_PACKAGES="apache2 \
     tesseract-ocr-rus \
     leptonica-progs \
     libleptonica-dev" && \
-    apt-mark hold ghostscript && \
+    apt-get update && \
     apt-get install --no-install-recommends -y $APACHE_PACKAGES && \
     apt-get purge -y --auto-remove openjdk* && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     cd /opt && \
     wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
     tar -xzf adore-djatoka-1.1.tar.gz && \
@@ -146,27 +157,34 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
 
 COPY rootfs /
 
-# Finalize... (uhg --)
+# Finalize..
 # RUN mkdir -p /tmp/build && \
 #     cd /tmp/build && \
 #     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
 #     php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
-#     cd / && \
-#     rm -rf /tmp/build && \
-#     cd /home/islandora && \
-#     mkdir -p /opt/drush-7.x && \
-#     cd /opt/drush-7.x && \
-#     /usr/local/bin/composer init --require=drush/drush:7.* -n && \
+#     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
+#     unzip fits-1.2.0.zip && \
+#     mv fits-1.2.0 /usr/local/fits && \
+#     mkdir -p /opt/drush-8.x && \
+#     cd /opt/drush-8.x && \
+#     /usr/local/bin/composer init --require=drush/drush:8.* -n && \
 #     /usr/local/bin/composer config bin-dir /usr/local/bin && \
 #     /usr/local/bin/composer install && \
-#     chmod 755 /opt/drush-7.x && \
-#     chown -R islandora:www-data /opt/drush-7.x && \
-#     chown -R islandora:www-data /opt/adore-djatoka-1.1 && \
+#     rm -rf /tmp/build && \
+#     chown -R $ISLANDORA_USER:www-data /usr/local/fits && \
+#     cd /usr/local/fits/ && \
+#     chmod 775 fits-env.sh && \
+#     chmod 775 fits-ngserver.sh && \
+#     chmod 775 fits.sh && \
+#     chmod -R g+rwx /usr/local/fits && \
+#     chmod 755 /opt/drush-8.x && \
+#     chown -R $ISLANDORA_USER:www-data /opt/drush-7.x && \
+#     chown -R $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1 && \
 #     chmod -R g+rwx /opt/adore-djatoka-1.1 && \
 #     chmod 655 /opt/adore-djatoka-1.1/bin/env.sh && \
-#     chown islandora:www-data /opt/adore-djatoka-1.1/bin/env.sh && \
+#     chown $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1/bin/env.sh && \
 #     chmod 655 /opt/adore-djatoka-1.1/bin/envinit.sh && \
-#     chown islandora:www-data /opt/adore-djatoka-1.1/bin/envinit.sh && \
+#     chown $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1/bin/envinit.sh && \
 #     chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
 #     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
 #     ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
@@ -174,23 +192,12 @@ COPY rootfs /
 #     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_a60R.so /usr/local/lib/libkdu_a60R.so && \
 #     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_jni.so /usr/local/lib/libkdu_jni.so && \
 #     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_v60R.so /usr/local/lib/libkdu_v60R.so && \
-#     chown -h islandora:www-data /usr/local/bin/kdu_compress && \
-#     chown -h islandora:www-data /usr/local/bin/kdu_expand && \
-#     chown -h islandora:www-data /usr/local/lib/libkdu_a60R.so && \
-#     chown -h islandora:www-data /usr/local/lib/libkdu_jni.so && \
-#     chown -h islandora:www-data /usr/local/lib/libkdu_v60R.so && \
+#     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_compress && \
+#     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_expand && \
+#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_a60R.so && \
+#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_jni.so && \
+#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_v60R.so && \
 #     /sbin/ldconfig && \
-#     cd /home/islandora && \
-#     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
-#     unzip fits-1.2.0.zip && \
-#     mv /home/islandora/fits-1.2.0 /usr/local/fits && \
-#     chown -R islandora:www-data /usr/local/fits && \
-#     chmod -R g+rwx /usr/local/fits && \
-#     cd /usr/local/fits/ && \
-#     chmod 775 fits-env.sh && \
-#     chmod 775 fits-ngserver.sh && \
-#     chmod 775 fits.sh && \
-#     rm /home/islandora/fits-1.2.0.zip && \
 #     touch /var/log/cron.log && \
 #     pecl install uploadprogress && \
 #     echo 'extension=uploadprogress.so' >> /etc/php/5.6/apache2/php.ini && \
@@ -201,16 +208,14 @@ COPY rootfs /
 #     sed -i 's/max_execution_time = .*/max_execution_time = '0'/' /etc/php/5.6/apache2/php.ini && \
 #     # a2enconf servername && \
 #     mkdir -p /var/www/html && \
-#     chown islandora:www-data /var/www/html && \
 #     chmod -R 777 /var/www/html && \
-#     chown -R islandora:www-data /var/www/html && \
-#     chown islandora:www-data /usr/local/bin/ffmpeg && \
-#     chown islandora:www-data /usr/local/bin/ffprobe && \
-#     chown islandora:www-data /usr/local/bin/ffserver && \
-#     chown islandora:www-data /usr/local/bin/qt-faststart && \
-#     chown islandora:www-data /usr/bin/lame && \
-#     chown islandora:www-data /usr/bin/x264 && \
-#     chown islandora:www-data /usr/bin/xtractprotos && \
+#     chown -R $ISLANDORA_USER:www-data /var/www/html && \
+#     chown $ISLANDORA_USER:www-data /usr/local/bin/ffmpeg && \
+#     chown $ISLANDORA_USER:www-data /usr/local/bin/ffprobe && \
+#     chown $ISLANDORA_USER:www-data /usr/local/bin/qt-faststart && \
+#     chown $ISLANDORA_USER:www-data /usr/bin/lame && \
+#     chown $ISLANDORA_USER:www-data /usr/bin/x264 && \
+#     chown $ISLANDORA_USER:www-data /usr/bin/xtractprotos && \
 #     a2dissite 000-default && \
 #     a2dissite default-ssl && \
 #     a2ensite isle_localdomain_ssl.conf && \
