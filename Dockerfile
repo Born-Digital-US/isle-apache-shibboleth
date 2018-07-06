@@ -154,7 +154,7 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     ## CLEANUP
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
 ## Temporary Build directory for composer, fits...
