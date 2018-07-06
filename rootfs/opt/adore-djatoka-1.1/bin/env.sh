@@ -1,10 +1,10 @@
 #!/bin/sh
-LAUNCHDIR=/opt/adore-djatoka-1.1/bin
+# setup environment variables for shell script
 DJATOKA_HOME=/opt/adore-djatoka-1.1
 LIBPATH=$DJATOKA_HOME/lib
 
 if [ `uname` = 'Linux' ] ; then
-  if [ `uname -p` = "x86_64" ] ; then
+  if [ `uname -m` = "x86_64" ] ; then
     # Assume Linux AMD 64 has 64-bit Java
     PLATFORM="Linux-x86-64"
     LD_LIBRARY_PATH="$LIBPATH/$PLATFORM"
@@ -42,4 +42,17 @@ fi
 
 KAKADU_HOME=$DJATOKA_HOME/bin/$PLATFORM
 export KAKADU_HOME
-JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true -Dkakadu.home=$KAKADU_HOME -Djava.library.path=$LIBPATH/$PLATFORM $KAKADU_LIBRARY_PATH"
+cd $LAUNCHDIR
+for line in `ls -1 $LIBPATH | grep '.jar'`
+  do
+  classpath="$classpath:$LIBPATH/$line"
+done
+#DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+CLASSPATH=.:../build/:$classpath
+JAVA_OPTS="$DEBUG -Djava.awt.headless=true  -Xmx512M -Xms64M -Dkakadu.home=$KAKADU_HOME -Djava.library.path=$LIBPATH/$PLATFORM $KAKADU_LIBRARY_PATH"
+
+# If a proxy server is used in your institution... uncomment and set the following:
+#proxySet=true
+#proxyPort=8080
+#proxyHost=proxyout.lanl.gov
+#JAVA_OPTS="$JAVA_OPTS -DproxySet=$proxySet -DproxyPort=$proxyPort -DproxyHost=$proxyHost"

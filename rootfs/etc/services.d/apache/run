@@ -1,3 +1,11 @@
 #!/usr/bin/with-contenv sh
 
+if [ "$ENABLE_XDEBUG" = true ] ; then
+    echo 'XDEBUG ON'
+    phpenmod xdebug
+else
+	echo 'XDEBUG OFF'
+	phpdismod xdebug
+fi
+
 exec /usr/sbin/apache2ctl -D "FOREGROUND";

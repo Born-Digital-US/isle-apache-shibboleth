@@ -17,7 +17,8 @@ RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
     rm /tmp/s6-overlay-amd64.tar.gz
 
 ENV INITRD=no \
-    ISLANDORA_USER=${ISLANDORA_USER:-islandora}
+    ISLANDORA_UID=${ISLANDORA_UID:-1000} \
+    ENABLE_XDEBUG=${ENABLE_XDEBUG:-false}
 
 ## General Dependencies
 RUN GEN_DEP_PACKS="software-properties-common \
@@ -74,9 +75,8 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
     COMPOSER_ALLOW_SUPERUSER=1
 
 ## Apache, PHP, Islandora Depends.
-FROM isle-apache-base as final
 ## Apache && PHP 5.6 from ondrej PPA
-## Per @g7morris, ghostscript from repo is OK!
+## Per @g7morris, ghostscript from repo is OK.
 RUN add-apt-repository -y ppa:ondrej/apache2 && \
     add-apt-repository -y ppa:ondrej/php && \
     APACHE_PACKAGES="apache2 \
@@ -105,6 +105,8 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     php5.6-bcmath \
     php5.6-intl \
     php5.6-imagick \
+    php-uploadprogress \
+    php-xdebug \
     libpng-dev \
     libjpeg-dev \
     libtiff-dev \
@@ -143,28 +145,28 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     libleptonica-dev" && \
     apt-get update && \
     apt-get install --no-install-recommends -y $APACHE_PACKAGES && \
-    ## PHP conf
+    ## PHP conf  
+    phpdismod xdebug && \
+    ## memory_limit = -1?
     sed -i 's/memory_limit = .*/memory_limit = '256M'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/upload_max_filesize = .*/upload_max_filesize = '2000M'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/post_max_size = .*/post_max_size = '2000M'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/max_input_time = .*/max_input_time = '-1'/' /etc/php/5.6/apache2/php.ini && \
     sed -i 's/max_execution_time = .*/max_execution_time = '0'/' /etc/php/5.6/apache2/php.ini && \
-    pecl install uploadprogress && \
-    echo 'extension=uploadprogress.so' >> /etc/php/5.6/apache2/php.ini && \
-    ## CLEANUP
+    ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
-## Temporary Build directory for composer, fits...
-RUN mkdir -p /tmp/build && \
+RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --system --uid $ISLANDORA_UID --user-group -s /bin/bash islandora && \
+    chown -R islandora:www-data /var/www/html && \
+    ## Temporary directory for composer, fits, etc...
+    mkdir -p /tmp/build && \
     cd /tmp/build && \
     ## DJATOKA
     wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
     tar -xzf adore-djatoka-1.1.tar.gz -C /opt/ && \
-    sed -i 's/DJATOKA_HOME=`pwd`/DJATOKA_HOME=\/opt\/adore-djatoka-1.1/g' /opt/adore-djatoka-1.1/bin/env.sh && \
-    sed -i 's|`uname -p` = "x86_64"|`uname -m` = "x86_64"|' /opt/adore-djatoka-1.1/bin/env.sh && \
     touch /etc/ld.so.conf.d/kdu_libs.conf && \
     echo "/opt/adore-djatoka-1.1/lib/Linux-x86-64" > /etc/ld.so.conf.d/kdu_libs.conf && \
     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
@@ -188,43 +190,25 @@ RUN mkdir -p /tmp/build && \
     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
     unzip fits-1.2.0.zip && \
     mv fits-1.2.0 /usr/local/fits && \
-    ## CLEANUP
-    rm -rf /tmp/build /tmp/* /var/tmp/* 
+    ## Cleanup phase.
+    rm -rf /tmp/* /var/tmp/* 
 
 COPY rootfs /
 
-## @TODO REDO PERM using S6.
+RUN a2dissite 000-default && \
+    a2ensite isle_localdomain.conf && \
+    a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc
+
 #     chown -R $ISLANDORA_USER:www-data /usr/local/fits && \
-#     cd /usr/local/fits/ && \
-#     chmod 775 fits-env.sh && \
-#     chmod 775 fits-ngserver.sh && \
-#     chmod 775 fits.sh && \
-#     chmod -R g+rwx /usr/local/fits && \
-#     chmod 755 /opt/drush-8.x && \
 #     chown -R $ISLANDORA_USER:www-data /opt/drush-7.x && \
 #     chown -R $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1 && \
-#     chmod -R g+rwx /opt/adore-djatoka-1.1 && \
-#     chmod 655 /opt/adore-djatoka-1.1/bin/env.sh && \
-#     chown $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1/bin/env.sh && \
-#     chmod 655 /opt/adore-djatoka-1.1/bin/envinit.sh && \
-#     chown $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1/bin/envinit.sh && \
-#     chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
-#     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
-#     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_compress && \
-#     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_expand && \
-#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_a60R.so && \
-#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_jni.so && \
-#     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_v60R.so && \
-#     # a2enconf servername && \
-#     mkdir -p /var/www/html && \
-#     chmod -R 777 /var/www/html && \
-#     chown -R $ISLANDORA_USER:www-data /var/www/html && \
 #     chown $ISLANDORA_USER:www-data /usr/local/bin/ffmpeg && \
 #     chown $ISLANDORA_USER:www-data /usr/local/bin/ffprobe && \
 #     chown $ISLANDORA_USER:www-data /usr/local/bin/qt-faststart && \
 #     chown $ISLANDORA_USER:www-data /usr/bin/lame && \
 #     chown $ISLANDORA_USER:www-data /usr/bin/x264 && \
 #     chown $ISLANDORA_USER:www-data /usr/bin/xtractprotos && \
+#     # a2enconf servername && \
 #     a2dissite 000-default && \
 #     a2dissite default-ssl && \
 #     a2ensite isle_localdomain_ssl.conf && \
@@ -234,8 +218,6 @@ COPY rootfs /
 VOLUME /var/www/html
 
 # Make sure ports 80 and 443 are available to the internal network.
-EXPOSE 80 443
+EXPOSE 80
 
-###
-# Run the Apache web server
 ENTRYPOINT ["/init"]
