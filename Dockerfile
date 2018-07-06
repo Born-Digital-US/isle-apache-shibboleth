@@ -29,41 +29,57 @@ RUN GEN_DEP_PACKS="software-properties-common \
     curl \
     rsync\
     git \
+    xz-utils \
     zip \
     unzip \
     bzip2 \
     openssl \
     openssh-client \
     mysql-client" && \
-    echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections && \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update && \
     apt-get install --no-install-recommends -y $GEN_DEP_PACKS && \
-    ## Prepare APT entirely for the remainder of the install.
-    add-apt-repository -y ppa:webupd8team/java && \
-    ## Apache && PHP 5.6 from ondrej
-    add-apt-repository -y ppa:ondrej/apache2 && \
-    add-apt-repository -y ppa:ondrej/php && \
+    ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en
 
-## Java
-RUN JAVA_PACKAGES="oracle-java8-installer \
+## tmpreaper - cleanup /tmp on the running container
+RUN touch /var/log/cron.log && \
+    touch /etc/cron.d/tmpreaper-cron && \
+    echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" | tee /etc/cron.d/tmpreaper-cron && \
+    chmod 0644 /etc/cron.d/tmpreaper-cron
+
+## JAVA PHASE
+## Oracle Java 8, default.
+RUN echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections && \
+    add-apt-repository -y ppa:webupd8team/java && \
+    JAVA_PACKAGES="oracle-java8-installer \
     oracle-java8-set-default" && \
     apt-get update && \
     apt-get install --no-install-recommends -y $JAVA_PACKAGES && \
+    ## Cleanup phase.
+    apt-get purge -y --auto-remove openjdk* && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/oracle-jdk8-installer
 
-# FINAL
+ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
+    JRE_HOME=/usr/lib/jvm/java-8-oracle/jre \
+    PATH=$PATH:$HOME/.composer/vendor/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/jre/bin \
+    KAKADU_LIBRARY_PATH=/opt/adore-djatoka-1.1/lib/Linux-x86-64 \
+    KAKADU_HOME=/opt/adore-djatoka-1.1/lib/Linux-x86-64 \
+    COMPOSER_ALLOW_SUPERUSER=1
+
+## Apache, PHP, Islandora Depends.
 FROM isle-apache-base as final
-## Apache, PHP, Islandora Dependencies.
-## Per @g7morris, ghostscript from repo is a go.
-RUN APACHE_PACKAGES="apache2 \
+## Apache && PHP 5.6 from ondrej PPA
+## Per @g7morris, ghostscript from repo is OK!
+RUN add-apt-repository -y ppa:ondrej/apache2 && \
+    add-apt-repository -y ppa:ondrej/php && \
+    APACHE_PACKAGES="apache2 \
     python-mysqldb \
     libxml2-dev \
     libapache2-mod-php5.6 \
@@ -127,50 +143,57 @@ RUN APACHE_PACKAGES="apache2 \
     libleptonica-dev" && \
     apt-get update && \
     apt-get install --no-install-recommends -y $APACHE_PACKAGES && \
-    apt-get purge -y --auto-remove openjdk* && \
+    ## PHP conf
+    sed -i 's/memory_limit = .*/memory_limit = '256M'/' /etc/php/5.6/apache2/php.ini && \
+    sed -i 's/upload_max_filesize = .*/upload_max_filesize = '2000M'/' /etc/php/5.6/apache2/php.ini && \
+    sed -i 's/post_max_size = .*/post_max_size = '2000M'/' /etc/php/5.6/apache2/php.ini && \
+    sed -i 's/max_input_time = .*/max_input_time = '-1'/' /etc/php/5.6/apache2/php.ini && \
+    sed -i 's/max_execution_time = .*/max_execution_time = '0'/' /etc/php/5.6/apache2/php.ini && \
+    pecl install uploadprogress && \
+    echo 'extension=uploadprogress.so' >> /etc/php/5.6/apache2/php.ini && \
+    ## CLEANUP
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    cd /opt && \
+
+## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
+## Temporary Build directory for composer, fits...
+RUN mkdir -p /tmp/build && \
+    cd /tmp/build && \
+    ## DJATOKA
     wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
-    tar -xzf adore-djatoka-1.1.tar.gz && \
-    rm adore-djatoka-1.1.tar.gz && \
+    tar -xzf adore-djatoka-1.1.tar.gz -C /opt/ && \
     sed -i 's/DJATOKA_HOME=`pwd`/DJATOKA_HOME=\/opt\/adore-djatoka-1.1/g' /opt/adore-djatoka-1.1/bin/env.sh && \
     sed -i 's|`uname -p` = "x86_64"|`uname -m` = "x86_64"|' /opt/adore-djatoka-1.1/bin/env.sh && \
     touch /etc/ld.so.conf.d/kdu_libs.conf && \
     echo "/opt/adore-djatoka-1.1/lib/Linux-x86-64" > /etc/ld.so.conf.d/kdu_libs.conf && \
     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
     chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
-    # touch /etc/apache2/conf-available/servername.conf && \
-    # echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && \
-    touch /etc/cron.d/tmpreaper-cron && \
-    echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" | tee /etc/cron.d/tmpreaper-cron && \
-    chmod 0644 /etc/cron.d/tmpreaper-cron
-
-###
-# Set up environmental variables for tomcat & dependencies installation
-ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
-    JRE_HOME=/usr/lib/jvm/java-8-oracle/jre \
-    PATH=$PATH:$HOME/.composer/vendor/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/jre/bin \
-    KAKADU_LIBRARY_PATH=/opt/adore-djatoka-1.1/lib/Linux-x86-64 \
-    KAKADU_HOME=/opt/adore-djatoka-1.1/lib/Linux-x86-64
+    ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
+    ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_expand /usr/local/bin/kdu_expand && \
+    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_a60R.so /usr/local/lib/libkdu_a60R.so && \
+    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_jni.so /usr/local/lib/libkdu_jni.so && \
+    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_v60R.so /usr/local/lib/libkdu_v60R.so && \
+    ldconfig && \
+    ## COMPOSER
+    wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
+    php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
+    ## DRUSH 8.x as recommended by @g7morris
+    mkdir -p /opt/drush-8.x && \
+    cd /opt/drush-8.x && \
+    /usr/local/bin/composer init --require=drush/drush:8.* -n && \
+    /usr/local/bin/composer config bin-dir /usr/local/bin && \
+    /usr/local/bin/composer install && \
+    ## FITS
+    wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
+    unzip fits-1.2.0.zip && \
+    mv fits-1.2.0 /usr/local/fits && \
+    ## CLEANUP
+    rm -rf /tmp/build /tmp/* /var/tmp/* 
 
 COPY rootfs /
 
-# Finalize..
-# RUN mkdir -p /tmp/build && \
-#     cd /tmp/build && \
-#     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
-#     php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
-#     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
-#     unzip fits-1.2.0.zip && \
-#     mv fits-1.2.0 /usr/local/fits && \
-#     mkdir -p /opt/drush-8.x && \
-#     cd /opt/drush-8.x && \
-#     /usr/local/bin/composer init --require=drush/drush:8.* -n && \
-#     /usr/local/bin/composer config bin-dir /usr/local/bin && \
-#     /usr/local/bin/composer install && \
-#     rm -rf /tmp/build && \
+## @TODO REDO PERM using S6.
 #     chown -R $ISLANDORA_USER:www-data /usr/local/fits && \
 #     cd /usr/local/fits/ && \
 #     chmod 775 fits-env.sh && \
@@ -187,25 +210,11 @@ COPY rootfs /
 #     chown $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1/bin/envinit.sh && \
 #     chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
 #     chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
-#     ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
-#     ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_expand /usr/local/bin/kdu_expand && \
-#     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_a60R.so /usr/local/lib/libkdu_a60R.so && \
-#     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_jni.so /usr/local/lib/libkdu_jni.so && \
-#     ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_v60R.so /usr/local/lib/libkdu_v60R.so && \
 #     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_compress && \
 #     chown -h $ISLANDORA_USER:www-data /usr/local/bin/kdu_expand && \
 #     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_a60R.so && \
 #     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_jni.so && \
 #     chown -h $ISLANDORA_USER:www-data /usr/local/lib/libkdu_v60R.so && \
-#     /sbin/ldconfig && \
-#     touch /var/log/cron.log && \
-#     pecl install uploadprogress && \
-#     echo 'extension=uploadprogress.so' >> /etc/php/5.6/apache2/php.ini && \
-#     sed -i 's/memory_limit = .*/memory_limit = '256M'/' /etc/php/5.6/apache2/php.ini && \
-#     sed -i 's/upload_max_filesize = .*/upload_max_filesize = '2000M'/' /etc/php/5.6/apache2/php.ini && \
-#     sed -i 's/post_max_size = .*/post_max_size = '2000M'/' /etc/php/5.6/apache2/php.ini && \
-#     sed -i 's/max_input_time = .*/max_input_time = '-1'/' /etc/php/5.6/apache2/php.ini && \
-#     sed -i 's/max_execution_time = .*/max_execution_time = '0'/' /etc/php/5.6/apache2/php.ini && \
 #     # a2enconf servername && \
 #     mkdir -p /var/www/html && \
 #     chmod -R 777 /var/www/html && \
