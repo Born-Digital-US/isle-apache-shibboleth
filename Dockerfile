@@ -107,29 +107,24 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     php5.6-imagick \
     php-uploadprogress \
     php-xdebug \
+    imagemagick \
+    libimage-exiftool-perl \
+    libtool \
     libpng-dev \
     libjpeg-dev \
     libtiff-dev \
-    imagemagick \
+    libgif-dev \
+    giflib-tools \
     ffmpeg \
     ffmpeg2theora \
     libavcodec-extra \
-    xpdf \
     x264 \
+    lame \
+    ghostscript \
+    xpdf \
     poppler-utils \
     bibutils \
-    libimage-exiftool-perl \
-    lame \
-    libpng-dev \
-    libjpeg-dev \
-    libtiff-dev \
     zlib1g-dev \
-    libtool \
-    libtiff-dev \
-    libjpeg-dev \
-    libpng-dev \
-    giflib-tools \
-    libgif-dev \
     libicu-dev \
     tesseract-ocr \
     tesseract-ocr-eng \
@@ -164,7 +159,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     ## Temporary directory for composer, fits, etc...
     mkdir -p /tmp/build && \
     cd /tmp/build && \
-    ## DJATOKA
+    ## Kakadu libraries from adore-djatoka.  This is a @TODO: cleanup by getting on needed libs and binaries. 
     wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
     tar -xzf adore-djatoka-1.1.tar.gz -C /opt/ && \
     touch /etc/ld.so.conf.d/kdu_libs.conf && \
@@ -190,6 +185,10 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
     unzip fits-1.2.0.zip && \
     mv fits-1.2.0 /usr/local/fits && \
+    mkdir -p /var/log/fits && \
+    chgrp www-data /var/log/fits && \
+    chmod 775 /var/log/fits && \
+    sed -i 's#log4j.appender.FILE.File = .*#log4j.appender.FILE.File = /var/log/fits/fits.log#' /usr/local/fits/log4j.properties && \
     ## Cleanup phase.
     rm -rf /tmp/* /var/tmp/* 
 

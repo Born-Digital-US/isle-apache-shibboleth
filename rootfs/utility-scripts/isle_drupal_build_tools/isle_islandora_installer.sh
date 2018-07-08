@@ -17,11 +17,8 @@ echo "Using Islandora makefile for Islandora Modules for sample Drupal site with
 echo "Update settings.php with ISLE default"
 cp -fv /utility-scripts/isle_drupal_build_tools/isle-drush_make/settings.php /tmp/drupal_install/sites/default/settings.php
 
-echo "Moving ..."
-mv -v /tmp/drupal_install/. /var/www/html/
-
-# echo "Copy /tmp/settings.php to /var/www/html/sites/default/settings.php"
-# cp -v /tmp/settings.php /var/www/html/sites/default/
+echo "Copying Islandora Installation..."
+cp -r /tmp/drupal_install/* /var/www/html/
 
 echo "Fix Openseadragon & Change directory to /var/www/html/sites/all/libraries"
 cd /var/www/html/sites/all/libraries || exit
@@ -61,8 +58,8 @@ echo "Drush vset of Drupal Site configurations"
 /usr/local/bin/drush -u 1 -y vset islandora_pdf_create_fulltext "1"
 /usr/local/bin/drush -u 1 -y vset islandora_batch_java "/usr/bin/java"
 /usr/local/bin/drush -u 1 -y vset islandora_lame_url "/usr/bin/lame"
-/usr/local/bin/drush -u 1 -y vset islandora_paged_content_gs "/usr/local/bin/gs"
-/usr/local/bin/drush -u 1 -y vset islandora_video_ffmpeg_path "/usr/local/bin/ffmpeg"
+/usr/local/bin/drush -u 1 -y vset islandora_paged_content_gs "/usr/bin/gs"
+/usr/local/bin/drush -u 1 -y vset islandora_video_ffmpeg_path "/usr/bin/ffmpeg"
 /usr/local/bin/drush -u 1 -y vset islandora_video_ffmpeg2theora_path "/usr/bin/ffmpeg2theora"
 /usr/local/bin/drush -u 1 -y vset islandora_use_kakadu "TRUE"
 /usr/local/bin/drush -u 1 -y vset islandora_kakadu_url "/usr/local/bin/kdu_compress"
@@ -158,7 +155,7 @@ drush pdfjs-plugin
 drush iabookreader-plugin
 # Due to Islandora Paged Content Module install hook, the islandora_paged_content_gs variable is overwritten by the install / enabling of the module back to /usr/bin/gs
 echo "Rerunning drush vset to ensure that Ghostscript works for the PDF DERIVATIVE SETTINGS"
-/usr/local/bin/drush -u 1 -y vset islandora_paged_content_gs "/usr/local/bin/gs"
+/usr/local/bin/drush -u 1 -y vset islandora_paged_content_gs "/usr/bin/gs"
 
 echo "Re-running the islandora_video_mp4_audio_codec vset!"
 /usr/local/bin/drush @sites -u 1 -y vset islandora_video_mp4_audio_codec "aac"
