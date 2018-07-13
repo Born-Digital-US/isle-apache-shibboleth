@@ -182,9 +182,11 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     /usr/local/bin/composer config bin-dir /usr/local/bin && \
     /usr/local/bin/composer install && \
     ## FITS
+    cd /tmp/build && \
     wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
     unzip fits-1.2.0.zip && \
     mv fits-1.2.0 /usr/local/fits && \
+    ln -s /usr/local/fits/fits.sh /usr/local/bin/fits && \
     mkdir -p /var/log/fits && \
     chgrp www-data /var/log/fits && \
     chmod 775 /var/log/fits && \

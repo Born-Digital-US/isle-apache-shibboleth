@@ -309,8 +309,8 @@ $drupal_hash_salt = 'YO9ST25G4zaVnJT7w05PEH3r39pxhQQUf0LMo6NztY9al';
  */
 
 # 2/27/2018 Commented out due to inclusion of proxy and nginx upstreams
-# $base_url = 'http://isle.localdomain';  // NO trailing slash!
-# Leave commented out proxy will resolve this
+# 2018/07/13 - Added back in to resolve mixed-content errors through traefik.
+$base_url = 'https://isle.localdomain';  // NO trailing slash!
 
 /**
  * PHP settings:
