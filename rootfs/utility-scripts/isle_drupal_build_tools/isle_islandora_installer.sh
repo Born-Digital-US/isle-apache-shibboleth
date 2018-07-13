@@ -18,7 +18,7 @@ echo "Update settings.php with ISLE default"
 cp -fv /utility-scripts/isle_drupal_build_tools/isle-drush_make/settings.php /tmp/drupal_install/sites/default/settings.php
 
 echo "Copying Islandora Installation..."
-cp -r /tmp/drupal_install/* /var/www/html/
+rsync -r --delete --chown:islandora:www-data /tmp/drupal_install /var/www/html
 
 echo "Fix Openseadragon & Change directory to /var/www/html/sites/all/libraries"
 cd /var/www/html/sites/all/libraries || exit
