@@ -1,15 +1,17 @@
-ARG BASE=ubuntu:bionic
-FROM $BASE as isle-apache-base
+FROM ubuntu:bionic as isle-apache
 
-##
-LABEL "io.github.islandora-collaboration-group.name"="isle-apache" \
-      "io.github.islandora-collaboration-group.description"="ISLE Apache container, responsible for serving Drupal and Islandora's presentation layer!\
-A default site called isle.localdomain is prepared for those looking to explore Islandora for the first time!" \
-      "io.github.islandora-collaboration-group.license"="Apache-2.0" \
-      "io.github.islandora-collaboration-group.vcs-url"="git@github.com:Islandora-Collaboration-Group/ISLE.git" \
-      "io.github.islandora-collaboration-group.vendor"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
-      "io.github.islandora-collaboration-group.maintainer"="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com"
-##
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.label-schema.build-date="2018-08-05T17:13:02Z" \
+      org.label-schema.name="ISLE Apache Image" \
+      org.label-schema.description="Primary Islandora Image." \
+      org.label-schema.url="https://islandora-collaboration-group.github.io" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
+      org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0"
 
 ## S6-Overlay @see: https://github.com/just-containers/s6-overlay
 ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.4.0/s6-overlay-amd64.tar.gz /tmp/
@@ -25,6 +27,7 @@ RUN GEN_DEP_PACKS="software-properties-common \
     language-pack-en-base \
     tmpreaper \
     dnsutils \
+    ca-certificates \
     cron \
     wget \
     curl \
@@ -63,6 +66,7 @@ RUN echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean tru
     apt-get update && \
     apt-get install --no-install-recommends -y $JAVA_PACKAGES && \
     ## Cleanup phase.
+    add-apt-repository --remove -y ppa:webupd8team/java && \
     apt-get purge -y --auto-remove openjdk* && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/oracle-jdk8-installer
@@ -112,6 +116,7 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     libtool \
     libpng-dev \
     libjpeg-dev \
+    libopenjp2-7-dev \
     libtiff-dev \
     libgif-dev \
     giflib-tools \
@@ -159,18 +164,11 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     ## Temporary directory for composer, fits, etc...
     mkdir -p /tmp/build && \
     cd /tmp/build && \
-    ## Kakadu libraries from adore-djatoka.  This is a @TODO: cleanup by getting on needed libs and binaries. 
+    ## Kakadu libraries from adore-djatoka.
     wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
-    tar -xzf adore-djatoka-1.1.tar.gz -C /opt/ && \
-    touch /etc/ld.so.conf.d/kdu_libs.conf && \
-    echo "/opt/adore-djatoka-1.1/lib/Linux-x86-64" > /etc/ld.so.conf.d/kdu_libs.conf && \
-    chmod 444 /etc/ld.so.conf.d/kdu_libs.conf && \
-    chown root:root /etc/ld.so.conf.d/kdu_libs.conf && \
-    ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
-    ln -s /opt/adore-djatoka-1.1/bin/Linux-x86-64/kdu_expand /usr/local/bin/kdu_expand && \
-    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_a60R.so /usr/local/lib/libkdu_a60R.so && \
-    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_jni.so /usr/local/lib/libkdu_jni.so && \
-    ln -s /opt/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_v60R.so /usr/local/lib/libkdu_v60R.so && \
+    tar -xzf adore-djatoka-1.1.tar.gz && \
+    cp -rv adore-djatoka-1.1/bin/Linux-x86-64/* /usr/local/bin/ && \
+    cp -rv adore-djatoka-1.1/lib/Linux-x86-64/* /usr/local/lib/ && \
     ldconfig && \
     ## COMPOSER
     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
@@ -192,7 +190,10 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     chmod 775 /var/log/fits && \
     sed -i 's#log4j.appender.FILE.File = .*#log4j.appender.FILE.File = /var/log/fits/fits.log#' /usr/local/fits/log4j.properties && \
     ## Cleanup phase.
-    rm -rf /tmp/* /var/tmp/* 
+    apt-get purge -y --auto-remove gcc gcc-7-base make software-properties-common && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY rootfs /
 
@@ -200,25 +201,8 @@ RUN a2dissite 000-default && \
     a2ensite isle_localdomain.conf && \
     a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc
 
-#     chown -R $ISLANDORA_USER:www-data /usr/local/fits && \
-#     chown -R $ISLANDORA_USER:www-data /opt/drush-7.x && \
-#     chown -R $ISLANDORA_USER:www-data /opt/adore-djatoka-1.1 && \
-#     chown $ISLANDORA_USER:www-data /usr/local/bin/ffmpeg && \
-#     chown $ISLANDORA_USER:www-data /usr/local/bin/ffprobe && \
-#     chown $ISLANDORA_USER:www-data /usr/local/bin/qt-faststart && \
-#     chown $ISLANDORA_USER:www-data /usr/bin/lame && \
-#     chown $ISLANDORA_USER:www-data /usr/bin/x264 && \
-#     chown $ISLANDORA_USER:www-data /usr/bin/xtractprotos && \
-#     # a2enconf servername && \
-#     a2dissite 000-default && \
-#     a2dissite default-ssl && \
-#     a2ensite isle_localdomain_ssl.conf && \
-#     a2ensite isle_localdomain.conf && \
-#     a2enmod ssl rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc
-
 VOLUME /var/www/html
 
-# Make sure ports 80 and 443 are available to the internal network.
 EXPOSE 80
 
 ENTRYPOINT ["/init"]
