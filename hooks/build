@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "SOURCE_COMMIT: $SOURCE_COMMIT"
+
+if [[ -z "$SOURCE_COMMIT" ]]; then
+	export SOURCE_COMMIT="${SOURCE_COMMIT:-$(git rev-parse --short HEAD)}"
+	echo "Updating SOURCE_COMMIT from git rev-parse HEAD"
+	echo "SOURCE_COMMIT: $SOURCE_COMMIT"
+fi
+
+docker build \
+	--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+	--build-arg VCS_REF=$SOURCE_COMMIT \
+	--build-arg VERSION=RC-`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+	-t $IMAGE_NAME .

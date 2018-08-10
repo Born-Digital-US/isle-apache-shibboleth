@@ -3,7 +3,7 @@ FROM ubuntu:bionic as isle-apache
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
-LABEL org.label-schema.build-date="2018-08-05T17:13:02Z" \
+LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="ISLE Apache Image" \
       org.label-schema.description="Primary Islandora Image." \
       org.label-schema.url="https://islandora-collaboration-group.github.io" \
@@ -11,7 +11,11 @@ LABEL org.label-schema.build-date="2018-08-05T17:13:02Z" \
       org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
       org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
       org.label-schema.version=$VERSION \
-      org.label-schema.schema-version="1.0"
+      org.label-schema.schema-version="1.0" \
+      traefik.enable="true" \
+      traefik.port="80" \
+      traefik.backend="isle-apache"
+
 
 ## S6-Overlay @see: https://github.com/just-containers/s6-overlay
 ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.4.0/s6-overlay-amd64.tar.gz /tmp/
