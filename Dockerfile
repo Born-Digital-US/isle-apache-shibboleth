@@ -193,6 +193,10 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     chgrp www-data /var/log/fits && \
     chmod 775 /var/log/fits && \
     sed -i 's#log4j.appender.FILE.File = .*#log4j.appender.FILE.File = /var/log/fits/fits.log#' /usr/local/fits/log4j.properties && \
+    ## BUILD TOOLS
+    mkdir /utility-scripts && \
+    cd /utility-scripts && \
+    git clone https://github.com/exsilica/isle_drupal_build_tools.git && \
     ## Cleanup phase.
     apt-get purge -y --auto-remove gcc gcc-7-base make software-properties-common && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
