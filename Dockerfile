@@ -24,7 +24,8 @@ RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
 
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
-    ENABLE_XDEBUG=${ENABLE_XDEBUG:-false}
+    ENABLE_XDEBUG=${ENABLE_XDEBUG:-false} \
+    PULL_ISLE_BUILD_TOOLS=${PULL_ISLE_BUILD_TOOLS:-true}
 
 ## General Dependencies
 RUN GEN_DEP_PACKS="software-properties-common \
