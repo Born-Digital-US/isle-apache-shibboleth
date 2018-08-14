@@ -196,7 +196,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     ## BUILD TOOLS
     mkdir /utility-scripts && \
     cd /utility-scripts && \
-    git clone https://github.com/exsilica/isle_drupal_build_tools.git && \
+    git clone https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools.git && \
     ## Cleanup phase.
     apt-get purge -y --auto-remove gcc gcc-7-base make software-properties-common && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
