@@ -12,7 +12,17 @@ Based on:
 Contains and Includes:
  - [Composer](https://getcomposer.org)
  - [Drush 8.x](https://www.drush.org/)
- - Kakadu JP2 library and binaries.
+ - [Tesseract OCR](https://github.com/tesseract-ocr) w/ Language Packs:
+    - DEU (GER)
+ 	- ENG
+ 	- FRA
+    - HIN
+    - ITA
+    - JPN
+    - POR
+    - RUS
+    - SPA
+ - Kakadu JP2 library and binaries
  - [File Information Tool Set (FITS)](https://projects.iq.harvard.edu/fits/home)
  - [S6 Overlay](https://github.com/just-containers/s6-overlay) to manage services  
  - `cron` and `tmpreaper` to clean /tmp
