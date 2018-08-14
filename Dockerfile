@@ -79,8 +79,9 @@ RUN echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean tru
 ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
     JRE_HOME=/usr/lib/jvm/java-8-oracle/jre \
     PATH=$PATH:$HOME/.composer/vendor/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/jre/bin \
-    KAKADU_LIBRARY_PATH=usr/local/lib \
+    KAKADU_LIBRARY_PATH=/usr/local/lib \
     KAKADU_HOME=/usr/local/bin \
+    LD_LIBRARY_PATH=/usr/local/lib \
     COMPOSER_ALLOW_SUPERUSER=1
 
 ## Apache, PHP, Islandora Depends.

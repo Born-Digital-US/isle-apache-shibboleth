@@ -4,11 +4,11 @@
 # Also pending composer rework of ISLE BUILD TOOLS.
 if [ "$PULL_ISLE_BUILD_TOOLS" = true ] ; then
     CURRENT_BUILD_HASH=`git rev-parse --short HEAD`
-    echo 'Pulling newest version of ISLE Drupal Islandora build tools.'
-    echo "Current version $CURRENT_BUILD_HASH"
+    echo -e "Pulling newest version of ISLE Drupal Islandora build tools.\nCurrent version $CURRENT_BUILD_HASH"
     cd /utility-scripts/isle_drupal_build_tools || exit
     git fetch --all && git pull origin master
-    echo 'Done.'
+    NEW_BUILD_HASH=`git rev-parse --short HEAD`
+    echo -e "Done updating build_tools;\nOld build: $CURRENT_BUILD_HASH -> New build: $NEW_BUILD_HASH"
 fi
 
 ## XDEBUG
