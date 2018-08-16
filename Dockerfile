@@ -84,12 +84,19 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
     LD_LIBRARY_PATH=/usr/local/lib \
     COMPOSER_ALLOW_SUPERUSER=1
 
-## Apache, PHP, Islandora Depends.
+## Apache, PHP, FFMPEG, and other Islandora Depends.
 ## Apache && PHP 5.6 from ondrej PPA
 ## Per @g7morris, ghostscript from repo is OK.
 RUN add-apt-repository -y ppa:ondrej/apache2 && \
     add-apt-repository -y ppa:ondrej/php && \
-    APACHE_PACKAGES="apache2 \
+    FFMPEG_PACKS="ffmpeg \
+    ffmpeg2theora \
+    libavcodec-extra \
+    lame \
+    ghostscript \
+    xpdf \
+    poppler-utils" && \
+    APACHE_PACKS="apache2 \
     python-mysqldb \
     libxml2-dev \
     libapache2-mod-php5.6 \
@@ -117,25 +124,7 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     php5.6-imagick \
     php-uploadprogress \
     php-xdebug \
-    imagemagick \
-    libimage-exiftool-perl \
-    libtool \
-    libpng-dev \
-    libjpeg-dev \
-    libopenjp2-7-dev \
-    libtiff-dev \
-    libgif-dev \
-    giflib-tools \
-    ffmpeg \
-    ffmpeg2theora \
-    libavcodec-extra \
-    x264 \
-    lame \
-    ghostscript \
-    xpdf \
-    poppler-utils \
     bibutils \
-    zlib1g-dev \
     libicu-dev \
     tesseract-ocr \
     tesseract-ocr-eng \
@@ -150,7 +139,7 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     leptonica-progs \
     libleptonica-dev" && \
     apt-get update && \
-    apt-get install --no-install-recommends -y $APACHE_PACKAGES && \
+    apt-get install --no-install-recommends -y $FFMPEG_PACKS $APACHE_PACKS && \
     ## PHP conf  
     phpdismod xdebug && \
     ## memory_limit = -1?
@@ -164,18 +153,81 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+###
+# FFMPEG, ImageMagick, Imagick (php), Adore-Djatoka (Kakadu), and OpenJPG
+RUN BUILD_DEPS="build-essential \
+    cmake \
+    pkg-config \
+    libtool" && \
+    IMAGEMAGICK_LIBS="libbz2-dev \
+    libdjvulibre-dev \
+    libexif-dev \
+    libgif-dev \
+    libjpeg8 \
+    libjpeg-dev \
+    liblqr-dev \
+    libopenexr-dev \
+    libopenjp2-7-dev \
+    libpng-dev \
+    libraw-dev \
+    librsvg2-dev \
+    libtiff-dev \
+    libwmf-dev \
+    libwebp-dev \
+    libwmf-dev \
+    zlib1g-dev" && \
+    ## I believe these are unused and actually install by libavcodec-extra.
+    IMAGEMAGICK_LIBS_EXTENDED="libfontconfig \
+    libfreetype6-dev" && \
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends -o APT::Get::Install-Automatic=true $BUILD_DEPS && \
+    apt-mark auto $BUILD_DEPS software-properties-common && \
+    apt-get install -y --no-install-recommends $IMAGEMAGICK_LIBS && \
+    ## Adore-Djatoka
+    cd /tmp && \
+    ## Kakadu libraries from adore-djatoka. (Is this even necessary anymore?)
+    wget http://downloads.sourceforge.net/project/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
+    tar xf adore-djatoka-1.1.tar.gz && \
+    cp -rv adore-djatoka-1.1/bin/Linux-x86-64/* /usr/local/bin/ && \
+    cp -rv adore-djatoka-1.1/lib/Linux-x86-64/* /usr/local/lib/ && \
+    ldconfig && \
+    ## OpenJPEG 2000
+    cd /tmp && \
+    git clone https://github.com/uclouvain/openjpeg && \
+    cd openjpeg && \
+    mkdir build && cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release && \
+    make && \
+    make install && \
+    ldconfig && \
+    ## ImageMagick latest
+    cd /tmp && \
+    wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
+    tar xf ImageMagick.tar.gz && \
+    cd ImageMagick-* && \
+    ./configure --enable-hdri --with-quantum-depth=16 --without-x --without-magick-plus-plus --without-perl --with-rsvg && \
+    make && \
+    make install && \
+    ldconfig && \
+    ## PHP ImageMagick latest (IMagick)
+    cd /tmp && \
+    wget http://pecl.php.net/get/imagick && \
+    tar xf imagick && \
+    cd imagick-* && \
+    phpize && \
+    ./configure --with-imagick=/usr/local/bin && \
+    make && \
+    make install && \
+    ## Cleanup phase.
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
 RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --system --uid $ISLANDORA_UID --user-group -s /bin/bash islandora && \
     chown -R islandora:www-data /var/www/html && \
     ## Temporary directory for composer, fits, etc...
     mkdir -p /tmp/build && \
-    cd /tmp/build && \
-    ## Kakadu libraries from adore-djatoka.
-    wget https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
-    tar -xzf adore-djatoka-1.1.tar.gz && \
-    cp -rv adore-djatoka-1.1/bin/Linux-x86-64/* /usr/local/bin/ && \
-    cp -rv adore-djatoka-1.1/lib/Linux-x86-64/* /usr/local/lib/ && \
-    ldconfig && \
     ## COMPOSER
     wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
     php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
@@ -200,7 +252,6 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     cd /utility-scripts && \
     git clone https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools.git && \
     ## Cleanup phase.
-    apt-get purge -y --auto-remove gcc gcc-7-base make software-properties-common && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
