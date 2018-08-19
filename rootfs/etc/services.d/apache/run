@@ -3,12 +3,12 @@
 # Starter script - think bigger, like setting a custom remote, branch or tag to pull a specific set of build instructions.
 # Also pending composer rework of ISLE BUILD TOOLS.
 if [ "$PULL_ISLE_BUILD_TOOLS" = true ] ; then
-    CURRENT_BUILD_HASH=`git rev-parse --short HEAD`
-    echo -e "Pulling newest version of ISLE Drupal Islandora build tools.\nCurrent version $CURRENT_BUILD_HASH"
+    echo "Pulling newest version of ISLE Drupal Islandora build tools."
     cd /utility-scripts/isle_drupal_build_tools || exit
+    EXISTING_BUILD=`git rev-parse --short HEAD`
     git fetch --all && git pull origin master
     NEW_BUILD_HASH=`git rev-parse --short HEAD`
-    echo -e "Done updating build_tools;\nOld build: $CURRENT_BUILD_HASH -> New build: $NEW_BUILD_HASH"
+    echo -e "Done updating build_tools;\nOld build: $EXISTING_BUILD -> New build: $NEW_BUILD_HASH"
 fi
 
 ## XDEBUG
