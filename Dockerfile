@@ -177,7 +177,7 @@ RUN BUILD_DEPS="build-essential \
     wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
     tar xf ImageMagick.tar.gz && \
     cd ImageMagick-* && \
-    ./configure --enable-hdri --with-quantum-depth=16 --without-x --without-magick-plus-plus --without-perl --with-rsvg && \
+    ./configure --enable-hdri --with-quantum-depth=16 --without-magick-plus-plus --without-perl --with-rsvg && \
     make && \
     make install && \
     ldconfig && \
