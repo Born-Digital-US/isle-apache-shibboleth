@@ -1,4 +1,4 @@
-FROM ubuntu:bionic as isle-apache
+FROM benjaminrosner/isle-ubuntu-basebox:serverjre8
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -16,12 +16,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       traefik.port="80" \
       traefik.backend="isle-apache"
 
-
-## S6-Overlay @see: https://github.com/just-containers/s6-overlay
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.4.0/s6-overlay-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
-    rm /tmp/s6-overlay-amd64.tar.gz
-
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
     ENABLE_XDEBUG=${ENABLE_XDEBUG:-false} \
@@ -31,16 +25,9 @@ ENV INITRD=no \
 RUN GEN_DEP_PACKS="software-properties-common \
     language-pack-en-base \
     tmpreaper \
-    dnsutils \
-    ca-certificates \
     cron \
-    wget \
-    curl \
-    rsync\
-    git \
     xz-utils \
     zip \
-    unzip \
     bzip2 \
     openssl \
     openssh-client \
@@ -62,23 +49,7 @@ RUN touch /var/log/cron.log && \
     echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" | tee /etc/cron.d/tmpreaper-cron && \
     chmod 0644 /etc/cron.d/tmpreaper-cron
 
-## JAVA PHASE
-## Oracle Java 8, default.
-RUN echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 boolean true' | debconf-set-selections && \
-    add-apt-repository -y ppa:webupd8team/java && \
-    JAVA_PACKAGES="oracle-java8-installer \
-    oracle-java8-set-default" && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y $JAVA_PACKAGES && \
-    ## Cleanup phase.
-    add-apt-repository --remove -y ppa:webupd8team/java && \
-    apt-get purge -y --auto-remove openjdk* && \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/oracle-jdk8-installer
-
-ENV JAVA_HOME=/usr/lib/jvm/java-8-oracle \
-    JRE_HOME=/usr/lib/jvm/java-8-oracle/jre \
-    PATH=$PATH:$HOME/.composer/vendor/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/jre/bin \
+ENV PATH=$PATH:$HOME/.composer/vendor/bin \
     KAKADU_LIBRARY_PATH=/usr/local/lib \
     KAKADU_HOME=/usr/local/bin \
     LD_LIBRARY_PATH=/usr/local/lib \
