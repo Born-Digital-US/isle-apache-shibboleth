@@ -50,9 +50,9 @@ RUN touch /var/log/cron.log && \
     chmod 0644 /etc/cron.d/tmpreaper-cron
 
 ENV PATH=$PATH:$HOME/.composer/vendor/bin \
-    KAKADU_LIBRARY_PATH=/usr/local/lib \
-    KAKADU_HOME=/usr/local/bin \
-    LD_LIBRARY_PATH=/usr/local/lib \
+    KAKADU_HOME=/usr/local/adore-djatoka-1.1/bin/Linux-x86-64 \
+    KAKADU_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64 \
+    LD_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64:$LD_LIBRARY_PATH \
     COMPOSER_ALLOW_SUPERUSER=1
 
 ## Apache, PHP, FFMPEG, and other Islandora Depends.
