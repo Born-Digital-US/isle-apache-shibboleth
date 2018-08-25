@@ -158,11 +158,17 @@ RUN BUILD_DEPS="build-essential \
     ## Adore-Djatoka
     cd /tmp && \
     ## Kakadu libraries from adore-djatoka. (Is this even necessary anymore?)
-    wget http://downloads.sourceforge.net/project/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
-    tar xf adore-djatoka-1.1.tar.gz && \
-    cp -rv adore-djatoka-1.1/bin/Linux-x86-64/* /usr/local/bin/ && \
-    cp -rv adore-djatoka-1.1/lib/Linux-x86-64/* /usr/local/lib/ && \
+    curl -O -L https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
+    tar -xzf adore-djatoka-1.1.tar.gz -C /usr/local && \
+    ln -s /usr/local/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
+    ln -s /usr/local/adore-djatoka-1.1/bin/Linux-x86-64/kdu_expand /usr/local/bin/kdu_expand && \
+    ln -s /usr/local/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_a60R.so /usr/local/lib/libkdu_a60R.so && \
+    ln -s /usr/local/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_jni.so /usr/local/lib/libkdu_jni.so && \
+    ln -s /usr/local/adore-djatoka-1.1/lib/Linux-x86-64/libkdu_v60R.so /usr/local/lib/libkdu_v60R.so && \
+    echo "/usr/local/adore-djatoka-1.1/lib/Linux-x86-64" > /etc/ld.so.conf.d/kdu_libs.conf && \
     ldconfig && \
+    cd /usr/local/adore-djatoka-1.1/bin && \
+    rm -rf *.bat Solaris-Sparc Solaris-Sparcv9 Solaris-x86 Win32 ../dist/adore-djatoka.war && \
     ## OpenJPEG 2000
     cd /tmp && \
     git clone https://github.com/uclouvain/openjpeg && \
@@ -174,7 +180,7 @@ RUN BUILD_DEPS="build-essential \
     ldconfig && \
     ## ImageMagick latest
     cd /tmp && \
-    wget https://www.imagemagick.org/download/ImageMagick.tar.gz && \
+    curl -O -L https://www.imagemagick.org/download/ImageMagick.tar.gz && \
     tar xf ImageMagick.tar.gz && \
     cd ImageMagick-* && \
     ./configure --enable-hdri --with-quantum-depth=16 --without-magick-plus-plus --without-perl --with-rsvg && \
@@ -183,7 +189,7 @@ RUN BUILD_DEPS="build-essential \
     ldconfig && \
     ## PHP ImageMagick latest (IMagick)
     cd /tmp && \
-    wget http://pecl.php.net/get/imagick && \
+    curl -O -L http://pecl.php.net/get/imagick && \
     tar xf imagick && \
     cd imagick-* && \
     phpize && \
@@ -210,7 +216,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     /usr/local/bin/composer install && \
     ## FITS
     cd /tmp/build && \
-    wget https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
+    curl -O -L https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
     unzip fits-1.2.0.zip && \
     mv fits-1.2.0 /usr/local/fits && \
     ln -s /usr/local/fits/fits.sh /usr/local/bin/fits && \
