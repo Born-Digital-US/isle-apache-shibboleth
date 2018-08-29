@@ -52,7 +52,7 @@ RUN touch /var/log/cron.log && \
 ENV PATH=$PATH:$HOME/.composer/vendor/bin \
     KAKADU_HOME=/usr/local/adore-djatoka-1.1/bin/Linux-x86-64 \
     KAKADU_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64 \
-    LD_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64:$LD_LIBRARY_PATH \
+    LD_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64:/usr/local/lib:$LD_LIBRARY_PATH \
     COMPOSER_ALLOW_SUPERUSER=1
 
 ## Apache, PHP, FFMPEG, and other Islandora Depends.
@@ -92,7 +92,6 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     php5.6-zip \
     php5.6-bcmath \
     php5.6-intl \
-    php5.6-imagick \
     php-uploadprogress \
     php-xdebug \
     bibutils \
@@ -153,7 +152,7 @@ RUN BUILD_DEPS="build-essential \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update && \
     apt-get install -y --no-install-recommends -o APT::Get::Install-Automatic=true $BUILD_DEPS && \
-    apt-mark auto $BUILD_DEPS software-properties-common && \
+    # apt-mark auto $BUILD_DEPS software-properties-common && \
     apt-get install -y --no-install-recommends $IMAGEMAGICK_LIBS && \
     ## Adore-Djatoka
     cd /tmp && \
@@ -196,8 +195,10 @@ RUN BUILD_DEPS="build-essential \
     ./configure --with-imagick=/usr/local/bin && \
     make && \
     make install && \
+    echo '; configuration for php imagick module \nextension=imagick.so' > /etc/php/5.6/mods-available/imagick.ini && \
+    phpenmod imagick && \
     ## Cleanup phase.
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    apt-get purge $BUILD_DEPS software-properties-common -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.

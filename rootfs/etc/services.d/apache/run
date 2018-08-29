@@ -8,7 +8,7 @@ if [ "$PULL_ISLE_BUILD_TOOLS" = true ] ; then
     EXISTING_BUILD=`git rev-parse --short HEAD`
     git fetch --all && git pull origin master
     NEW_BUILD_HASH=`git rev-parse --short HEAD`
-    echo -e "Done updating build_tools;\nOld build: $EXISTING_BUILD -> New build: $NEW_BUILD_HASH"
+    echo "Done updating build_tools;\nOld build: $EXISTING_BUILD -> New build: $NEW_BUILD_HASH"
 fi
 
 ## XDEBUG
