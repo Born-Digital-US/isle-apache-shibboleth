@@ -4,10 +4,12 @@
 Designed as the webserver (httpd) for ISLE. Hosts Drupal and Islandora modules and includes an [install script to provide a quick start!](#loading-the-islelocaldomain-islandora-instance-quickstart)
 
 Based on:  
- - Ubuntu 18.04 "Bionic"
- - [Apache HTTPD 2.4](https://httpd.apache.org/)
- - [PHP 5.6](https://www.php.net/)
- - Oracle Java 8.x latest (via APT repo.)
+  - [ISLE-ubuntu-basebox](https://hub.docker.com/r/benjaminrosner/isle-ubuntu-basebox/)
+    - Ubuntu 18.04 "Bionic"
+    - General Dependencies (@see [ISLE-ubuntu-basebox](https://hub.docker.com/r/benjaminrosner/isle-ubuntu-basebox/))
+    - Oracle Java Server JRE.
+  - [Apache HTTPD 2.4](https://httpd.apache.org/)
+  - [PHP 5.6](https://www.php.net/)
 
 Contains and Includes:
   - [Composer](https://getcomposer.org)
@@ -30,7 +32,7 @@ Contains and Includes:
   - [S6 Overlay](https://github.com/just-containers/s6-overlay) to manage services  
   - `cron` and `tmpreaper` to clean /tmp
 
-Size: 1.7GB
+Size: 1.5GB
 
 ## Loading the ISLE.localdomain Islandora instance ('quickstart')
 
