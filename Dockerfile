@@ -12,9 +12,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
       org.label-schema.version=$VERSION \
       org.label-schema.schema-version="1.0" \
-      traefik.enable="true" \
-      traefik.port="80" \
-      traefik.backend="isle-apache"
+      traefik.port="80"
 
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
