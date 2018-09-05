@@ -1,5 +1,5 @@
 [template]
-src = "/utility-scripts/isle_drupal_build_tools/templates/settings.php.tpl"
+src = "../../../utility-scripts/isle_drupal_build_tools/templates/settings.php.tpl"
 dest = "/utility-scripts/isle_drupal_build_tools/isle-drush_make/settings.php"
 mode = "0644"
 keys = [

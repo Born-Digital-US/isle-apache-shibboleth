@@ -1,0 +1,10 @@
+[template]
+src = "sql/apache.sql.tpl"
+dest = "/tmp/apache.sql"
+mode = "0600"
+keys = [
+  "/drupal/db",
+  "/drupal/db/user",
+  "/drupal/db/pass"
+]
+reload_cmd="mysql -h mysql -uroot -p${MYSQL_ROOT_PASSWORD} < /tmp/apache.sql"

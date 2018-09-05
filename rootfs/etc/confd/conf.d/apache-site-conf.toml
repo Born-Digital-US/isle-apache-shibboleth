@@ -7,4 +7,4 @@ mode = "0644"
 keys = [
   "/base/domain"
 ]
-reload_cmd = "a2ensite islandora-site.conf && service apache2 reload"
+reload_cmd = "a2ensite islandora-site.conf"

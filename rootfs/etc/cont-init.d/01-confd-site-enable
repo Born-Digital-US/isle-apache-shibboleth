@@ -1,3 +1,19 @@
-#!/usr/bin/execlineb -P
+#!/usr/bin/with-contenv sh
 
-confd -onetime -backend env
+# Starter script - think bigger, like setting a custom remote, branch or tag to pull a specific set of build instructions.
+# Also pending composer rework of ISLE BUILD TOOLS.
+if [ "$PULL_ISLE_BUILD_TOOLS" = true ] ; then
+    echo "Pulling newest version of ISLE Drupal Islandora build tools."
+    cd /utility-scripts/isle_drupal_build_tools || exit
+    EXISTING_BUILD=`git rev-parse --short HEAD`
+    git fetch --all && git reset origin/master --hard
+    NEW_BUILD_HASH=`git rev-parse --short HEAD`
+    echo "Done updating build_tools;\nOld build: $EXISTING_BUILD -> New build: $NEW_BUILD_HASH"
+fi
+
+## Wait for SQL.
+while ! mysqladmin ping -hmysql --silent; do
+    sleep 1
+done
+
+/usr/local/bin/confd -onetime -backend env
