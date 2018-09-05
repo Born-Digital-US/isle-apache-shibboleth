@@ -1,0 +1,10 @@
+[template]
+src = "apache/site_template.conf.tpl"
+dest = "/etc/apache2/sites-available/islandora-site.conf"
+uid = 0
+gid = 0
+mode = "0644"
+keys = [
+  "/base/domain"
+]
+reload_cmd = "a2ensite islandora-site.conf && service apache2 reload"

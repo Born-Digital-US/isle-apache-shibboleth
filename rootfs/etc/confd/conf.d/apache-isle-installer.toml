@@ -1,0 +1,10 @@
+[template]
+src = "/utility-scripts/isle_drupal_build_tools/templates/isle_islandora_installer.sh.tpl"
+dest = "/utility-scripts/isle_drupal_build_tools/isle_islandora_installer.sh"
+mode = "0775"
+keys = [
+  "/drupal/site/name",
+  "/drupal/admin/user",
+  "/drupal/admin/pass",
+  "/drupal/admin/email"
+]

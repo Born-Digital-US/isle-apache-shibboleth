@@ -33,6 +33,7 @@ RUN GEN_DEP_PACKS="software-properties-common \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update && \
     apt-get install --no-install-recommends -y $GEN_DEP_PACKS && \
+
     ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -227,16 +228,15 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     mkdir /utility-scripts && \
     cd /utility-scripts && \
     git clone https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools.git && \
+    ## Disable Default
+    a2dissite 000-default && \
+    a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc && \
     ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY rootfs /
-
-RUN a2dissite 000-default && \
-    a2ensite isle_localdomain.conf && \
-    a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc
 
 VOLUME /var/www/html
 
