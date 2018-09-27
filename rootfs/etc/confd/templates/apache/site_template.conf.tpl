@@ -38,9 +38,9 @@
 	ProxyPass /cantaloupe/iiif/2 http://image-services:8080/cantaloupe/iiif/2 nocanon
 	ProxyPassReverse /cantaloupe/iiif/2 http://image-services:8080/cantaloupe/iiif/2
 
-	## We cannot use self-signed certs with adore-djatoka (which will be deprecated.)
+	## Use internal routing for adore-djatoka requests.
 	RewriteEngine On
-    RewriteCond %{QUERY_STRING} (.*)https(.*)
-    RewriteRule ^/adore-djatoka/resolver /adore-djatoka/resolver?%1http%2 [L,PT]
+	RewriteCond %{QUERY_STRING} (.*)(https|http)(?:[^%]|%[0-9A-Fa-f]{2})+(%2Fislandora.*)
+	RewriteRule ^/adore-djatoka/resolver /adore-djatoka/resolver?%1http://apache%3 [L,PT]
 
 </VirtualHost>
