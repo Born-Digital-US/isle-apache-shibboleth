@@ -1,19 +1,5 @@
 FROM islandoracollabgroup/isle-ubuntu-basebox:serverjre8
 
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="ISLE Apache Image" \
-      org.label-schema.description="Primary Islandora Image." \
-      org.label-schema.url="https://islandora-collaboration-group.github.io" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
-      org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
-      org.label-schema.version=$VERSION \
-      org.label-schema.schema-version="1.0" \
-      traefik.port="80"
-
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
     ENABLE_XDEBUG=${ENABLE_XDEBUG:-false} \
@@ -240,6 +226,21 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="ISLE Apache Image" \
+      org.label-schema.description="Primary Islandora Image." \
+      org.label-schema.url="https://islandora-collaboration-group.github.io" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
+      org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0" \
+      traefik.port="80" \
+      traefik.frontend.entryPoints=http,https
 
 COPY rootfs /
 
