@@ -1,23 +1,12 @@
-FROM benjaminrosner/isle-ubuntu-basebox:serverjre8
-
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="ISLE Apache Image" \
-      org.label-schema.description="Primary Islandora Image." \
-      org.label-schema.url="https://islandora-collaboration-group.github.io" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
-      org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
-      org.label-schema.version=$VERSION \
-      org.label-schema.schema-version="1.0" \
-      traefik.port="80"
+FROM islandoracollabgroup/isle-ubuntu-basebox:serverjre8
 
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
     ENABLE_XDEBUG=${ENABLE_XDEBUG:-false} \
-    PULL_ISLE_BUILD_TOOLS=${PULL_ISLE_BUILD_TOOLS:-true}
+    PULL_ISLE_BUILD_TOOLS=${PULL_ISLE_BUILD_TOOLS:-true} \
+    ISLE_BUILD_TOOLS_REPO=${ISLE_BUILD_TOOLS_REPO:-https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools.git} \
+    ISLE_BUILD_TOOLS_BRANCH=${ISLE_BUILD_TOOLS_BRANCH:-master}
+    ## @TODO: add GH creds to container for private repo pulls.
 
 ## General Dependencies
 RUN GEN_DEP_PACKS="software-properties-common \
@@ -229,7 +218,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     ## BUILD TOOLS
     mkdir /utility-scripts && \
     cd /utility-scripts && \
-    git clone https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools.git && \
+    git clone $ISLE_BUILD_TOOLS_REPO -b $ISLE_BUILD_TOOLS_BRANCH && \
     ## Disable Default
     a2dissite 000-default && \
     a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc && \
@@ -237,6 +226,21 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.name="ISLE Apache Image" \
+      org.label-schema.description="Primary Islandora Image." \
+      org.label-schema.url="https://islandora-collaboration-group.github.io" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/Islandora-Collaboration-Group/isle-apache" \
+      org.label-schema.vendor="Islandora Collaboration Group (ICG) - islandora-consortium-group@googlegroups.com" \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0" \
+      traefik.port="80" \
+      traefik.frontend.entryPoints=http,https
 
 COPY rootfs /
 
