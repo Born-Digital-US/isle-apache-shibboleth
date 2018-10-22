@@ -18,7 +18,8 @@ RUN GEN_DEP_PACKS="software-properties-common \
     bzip2 \
     openssl \
     openssh-client \
-    mysql-client" && \
+    mysql-client\
+    file" && \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
     apt-get update && \
     apt-get install --no-install-recommends -y $GEN_DEP_PACKS && \
