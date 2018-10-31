@@ -13,9 +13,9 @@ if [ "$PULL_ISLE_BUILD_TOOLS" = true ] ; then
     echo "Done updating build_tools;\nOld build: $EXISTING_BUILD -> New build: $NEW_BUILD_HASH"
 fi
 
-# ## Wait for SQL.
-# while ! mysqladmin ping -hmysql --silent; do
-#     sleep 1
-# done
+## Wait for SQL.
+while ! mysqladmin ping -hmysql --silent; do
+    sleep 1
+done
 
 /usr/local/bin/confd -onetime -backend env
