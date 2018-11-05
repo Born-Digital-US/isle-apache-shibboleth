@@ -1,2 +1,0 @@
-/var/www/html/ true islandora:www-data 0640 0750
-/var/www/html/sites/*/files true islandora:www-data 0660 0770

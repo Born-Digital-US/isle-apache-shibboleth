@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv sh
+
+usermod -u $ISLANDORA_UID islandora
+groupmod -g $ISLANDORA_UID islandora

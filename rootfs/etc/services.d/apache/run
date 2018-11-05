@@ -1,5 +1,12 @@
 #!/usr/bin/with-contenv sh
 
+## Fix permissions using the drupal fix-permissions script.
+if [ "$(ls -A /var/www/html/sites 2> /dev/null)" ]; then 
+	# Fix site directory permissions
+	echo "Running fix-permissions script..."
+	/bin/bash /utility-scripts/isle_drupal_build_tools/drupal/fix-permissions.sh --drupal_path=/var/www/html --drupal_user=islandora --httpd_group=www-data
+fi
+
 ## XDEBUG
 if [ "$ENABLE_XDEBUG" = true ] ; then
     echo 'XDEBUG ON'
