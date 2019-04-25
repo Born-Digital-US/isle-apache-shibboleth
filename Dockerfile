@@ -1,4 +1,4 @@
-FROM islandoracollabgroup/isle-ubuntu-basebox:serverjre8
+FROM islandoracollabgroup/isle-ubuntu-basebox:1.1.1
 
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
@@ -148,7 +148,7 @@ RUN BUILD_DEPS="build-essential \
     ## Adore-Djatoka
     cd /tmp && \
     ## Kakadu libraries from adore-djatoka. (Is this even necessary anymore?)
-    curl -O -L https://sourceforge.mirrorservice.org/d/dj/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
+    curl -LO http://downloads.sourceforge.net/project/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
     tar -xzf adore-djatoka-1.1.tar.gz -C /usr/local && \
     ln -s /usr/local/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
     ln -s /usr/local/adore-djatoka-1.1/bin/Linux-x86-64/kdu_expand /usr/local/bin/kdu_expand && \
@@ -192,13 +192,17 @@ RUN BUILD_DEPS="build-essential \
     apt-get purge $BUILD_DEPS software-properties-common -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+ENV COMPOSER_HASH=${COMPOSER_HASH:-76a7060ccb93902cd7576b67264ad91c8a2700e2} \    
+    FITS_VERSION=${FITS_VERSION:-1.4.0}
+
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
 RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --system --uid $ISLANDORA_UID --user-group -s /bin/bash islandora && \
     chown -R islandora:www-data /var/www/html && \
     ## Temporary directory for composer, fits, etc...
     mkdir -p /tmp/build && \
+    cd /tmp/build/ && \
     ## COMPOSER
-    wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/2091762d2ebef14c02301f3039c41d08468fb49e/web/installer && \
+    wget -O composer-setup.php https://raw.githubusercontent.com/composer/getcomposer.org/$COMPOSER_HASH/web/installer && \
     php composer-setup.php --filename=composer --install-dir=/usr/local/bin && \
     ## DRUSH 8.x as recommended by @g7morris
     mkdir -p /opt/drush-8.x && \
@@ -207,10 +211,11 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     /usr/local/bin/composer config bin-dir /usr/local/bin && \
     /usr/local/bin/composer install && \
     ## FITS
-    cd /tmp/build && \
-    curl -O -L https://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip && \
-    unzip fits-1.2.0.zip && \
-    mv fits-1.2.0 /usr/local/fits && \
+    cd /tmp/build/ && \
+    curl -O -L https://github.com/harvard-lts/fits/releases/download/$FITS_VERSION/fits-$FITS_VERSION.zip && \
+    mkdir fits-$FITS_VERSION && \
+    unzip fits-$FITS_VERSION.zip -d fits-$FITS_VERSION && \
+    mv fits-$FITS_VERSION /usr/local/fits && \
     ln -s /usr/local/fits/fits.sh /usr/local/bin/fits && \
     mkdir -p /var/log/fits && \
     chgrp www-data /var/log/fits && \
