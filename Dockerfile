@@ -1,4 +1,4 @@
-FROM islandoracollabgroup/isle-ubuntu-basebox:1.1.1
+FROM adoptopenjdk/openjdk8:latest
 
 ENV INITRD=no \
     ISLANDORA_UID=${ISLANDORA_UID:-1000} \
@@ -13,6 +13,14 @@ RUN GEN_DEP_PACKS="software-properties-common \
     language-pack-en-base \
     tmpreaper \
     cron \
+    dnsutils \
+    wget \
+    rsync \
+    git \
+    unzip \
+    tmpreaper \
+    libapr1-dev \
+    libssl-dev \
     xz-utils \
     zip \
     bzip2 \
@@ -29,6 +37,12 @@ RUN GEN_DEP_PACKS="software-properties-common \
     ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+## S6-Overlay @see: https://github.com/just-containers/s6-overlay
+ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-1.21.7.0}
+ADD https://github.com/just-containers/s6-overlay/releases/download/v$S6_OVERLAY_VERSION/s6-overlay-amd64.tar.gz /tmp/
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
+    rm /tmp/s6-overlay-amd64.tar.gz
 
 ENV LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -147,7 +161,7 @@ RUN BUILD_DEPS="build-essential \
     apt-get install -y --no-install-recommends $IMAGEMAGICK_LIBS && \
     ## Adore-Djatoka
     cd /tmp && \
-    ## Kakadu libraries from adore-djatoka. (Is this even necessary anymore?)
+    ## Kakadu libraries from adore-djatoka for JP2 derivatives.
     curl -LO http://downloads.sourceforge.net/project/djatoka/djatoka/1.1/adore-djatoka-1.1.tar.gz && \
     tar -xzf adore-djatoka-1.1.tar.gz -C /usr/local && \
     ln -s /usr/local/adore-djatoka-1.1/bin/Linux-x86-64/kdu_compress /usr/local/bin/kdu_compress && \
@@ -226,7 +240,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     ## BUILD TOOLS
     mkdir /utility-scripts && \
     cd /utility-scripts && \
-    git clone $ISLE_BUILD_TOOLS_REPO -b $ISLE_BUILD_TOOLS_BRANCH && \
+    git clone $ISLE_BUILD_TOOLS_REPO -b $ISLE_BUILD_TOOLS_BRANCH isle_drupal_build_tools && \
     ## Disable Default
     a2dissite 000-default && \
     a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc && \
