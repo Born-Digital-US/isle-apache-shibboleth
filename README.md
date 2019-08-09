@@ -32,14 +32,8 @@ Contains and Includes:
 
 ## Loading the ISLE.localdomain Islandora instance ('quickstart')
 
-to initialize the current version of Islandora...  
+* To install the current version of Islandora along with a local Drupal website...  
 `docker exec -it isle-apache-ld bash /utility-scripts/isle_drupal_build_tools/isle_islandora_installer.sh`
-
-### Default Login information
-
-Drupal login information
-  - Username: isle
-  - Password: isle
 
 ## Environmental Variables Available:
 
@@ -53,3 +47,7 @@ Enables the XDEBUG Apache mod for remote debugging.
 
   - PULL_ISLE_BUILD_TOOLS = true (default) | false  
 Fetches the latest ISLE build tools from the (Islandora Collaboration Group)[https://github.com/Islandora-Collaboration-Group/isle_drupal_build_tools]
+
+## Usage
+
+* For general usage of this image and [ISLE](https://github.com/Islandora-Collaboration-Group/ISLE), please refer to [ISLE documentation](https://islandora-collaboration-group.github.io/ISLE/)

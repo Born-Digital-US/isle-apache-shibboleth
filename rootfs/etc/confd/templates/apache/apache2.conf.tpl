@@ -131,7 +131,7 @@ HostnameLookups Off
 # logged here.  If you *do* define an error logfile for a <VirtualHost>
 # container, that host's errors will be logged there and not here.
 #
-ErrorLog ${APACHE_LOG_DIR}/error.log
+Errorlog /dev/stderr
 
 #
 # LogLevel: Control the severity of messages logged to the error_log.
@@ -139,8 +139,8 @@ ErrorLog ${APACHE_LOG_DIR}/error.log
 # error, crit, alert, emerg.
 # It is also possible to configure the log level for particular modules, e.g.
 # "LogLevel info ssl:warn"
-#
-LogLevel warn
+# warn is default
+LogLevel {{getv "/apache/error/loglevel"}}
 
 # Include module configuration:
 IncludeOptional mods-enabled/*.load

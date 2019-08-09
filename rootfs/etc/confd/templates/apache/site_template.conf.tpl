@@ -1,8 +1,8 @@
 <VirtualHost *:80>
 	# ServerName {{getv "/base/domain"}}
 	DocumentRoot /var/www/html
-	ErrorLog /var/log/apache2/{{getv "/base/domain"}}.error.log
-	CustomLog /var/log/apache2/{{getv "/base/domain"}}-access.log combined
+    Errorlog /dev/stderr
+	CustomLog /dev/stdout combined
 
 	<Directory /var/www/html/>
 		Require all granted

@@ -1,0 +1,9 @@
+[template]
+src = "apache/apache2.conf.tpl"
+dest = "/etc/apache2/apache2.conf"
+uid = 0
+gid = 0
+mode = "0644"
+keys = [
+  "/apache/error/loglevel"
+]

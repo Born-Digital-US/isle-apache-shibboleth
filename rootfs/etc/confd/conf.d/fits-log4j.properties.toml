@@ -1,0 +1,15 @@
+[template]
+src = "fits/log4j.properties.tpl"
+dest = "/usr/local/fits/log4j.properties"
+uid = 0
+gid = 0
+mode = "0644"
+keys = [
+  "/fits/rootlogger/log/level",
+  "/fits/console/log/level",
+  "/fits/uk/gov/nationalarchives/droid/log/level",
+  "/fits/edu/harvard/hul/ois/jhove/log/level",
+  "/fits/org/apache/tika/log/level",
+  "/fits/net/sf/log/level",
+  "/fits/org/apache/pdfbox/log/level"
+]
