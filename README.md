@@ -6,7 +6,7 @@ Designed as the webserver (httpd) for ISLE. Hosts Drupal and Islandora modules a
 Based on:  
   - [Adopt OpenJDK 8 Docker Image](https://hub.docker.com/r/adoptopenjdk/openjdk8)
   - [Apache HTTPD 2.4](https://httpd.apache.org/)
-  - [PHP 5.6](https://www.php.net/)
+  - [PHP 7.1](https://www.php.net/)
 
 Contains and Includes:
   - [Composer](https://getcomposer.org)
@@ -51,3 +51,4 @@ Fetches the latest ISLE build tools from the (Islandora Collaboration Group)[htt
 ## Usage
 
 * For general usage of this image and [ISLE](https://github.com/Islandora-Collaboration-Group/ISLE), please refer to [ISLE documentation](https://islandora-collaboration-group.github.io/ISLE/)
+
