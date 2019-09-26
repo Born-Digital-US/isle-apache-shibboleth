@@ -150,6 +150,7 @@ RUN BUILD_DEPS="build-essential \
     libwmf-dev \
     libwebp-dev \
     libwmf-dev \
+    libltdl-dev \
     zlib1g-dev" && \
     ## I believe these are unused and actually install by libavcodec-extra.
     IMAGEMAGICK_LIBS_EXTENDED="libfontconfig \
@@ -207,7 +208,7 @@ RUN BUILD_DEPS="build-essential \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV COMPOSER_HASH=${COMPOSER_HASH:-76a7060ccb93902cd7576b67264ad91c8a2700e2} \    
-    FITS_VERSION=${FITS_VERSION:-1.4.1}
+    FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
 RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --system --uid $ISLANDORA_UID --user-group -s /bin/bash islandora && \
@@ -239,7 +240,7 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     git clone $ISLE_BUILD_TOOLS_REPO -b $ISLE_BUILD_TOOLS_BRANCH isle_drupal_build_tools && \
     ## Disable Default
     a2dissite 000-default && \
-    a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc && \
+    a2enmod rewrite deflate headers expires proxy proxy_http proxy_html proxy_connect remoteip xml2enc cache_disk && \
     ## Cleanup phase.
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get clean && \
