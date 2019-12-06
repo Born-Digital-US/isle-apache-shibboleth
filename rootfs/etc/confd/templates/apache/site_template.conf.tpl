@@ -4,11 +4,14 @@
     Errorlog /dev/stderr
 	CustomLog /dev/stdout combined
 
-	<Directory /var/www/html/>
-		Require all granted
-		Options FollowSymlinks
-		AllowOverride all
-	</Directory>
+    <Directory /var/www/html>
+        AuthType shibboleth
+        Require shibboleth
+        ShibRequestSetting requireSession 0
+        # Require all granted
+        Options FollowSymlinks
+        AllowOverride all
+    </Directory>
 
 	# Apache Reverse Proxy for Islandora
 	ProxyRequests Off

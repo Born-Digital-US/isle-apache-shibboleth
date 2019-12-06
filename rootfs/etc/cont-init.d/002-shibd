@@ -1,0 +1,11 @@
+#!/usr/bin/with-contenv sh
+
+/usr/local/bin/confd -onetime -backend env
+
+## Fix permissions
+#/bin/chown -Rv root:root /etc/shibboleth
+
+## Run Shibboleth
+exec /usr/sbin/shibd -f -c /etc/shibboleth/shibboleth2.xml -p /run/shibboleth/shibd.pid -w 30
+#exec /usr/sbin/shibd start
+#service shibd start

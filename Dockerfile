@@ -246,6 +246,23 @@ RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --syste
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+## Install Shibboleth
+
+RUN curl --fail --remote-name https://pkg.switch.ch/switchaai/ubuntu/dists/bionic/main/binary-all/misc/switchaai-apt-source_1.0.0ubuntu1_all.deb && \
+    apt install ./switchaai-apt-source_1.0.0ubuntu1_all.deb && \
+    SHIBB_PACKS="shibboleth \
+    libapache2-mod-shib2" && \ 
+    apt-get update && \
+    apt-get install --install-recommends -y $SHIBB_PACKS && \
+    shibd -t && \
+    apache2ctl configtest && \
+    ## Cleanup phase.
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    apt-get clean && \
+    service shibd stop && \
+    mkdir -p /var/run/shibboleth && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /switchaai-apt-source_1.0.0ubuntu1_all.deb
+
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
