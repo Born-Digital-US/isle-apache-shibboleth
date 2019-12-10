@@ -1,5 +1,6 @@
 <VirtualHost *:80>
-	# ServerName {{getv "/base/domain"}}
+	ServerName https://{{getv "/base/domain"}}
+	UseCanonicalName On
 	DocumentRoot /var/www/html
     Errorlog /dev/stderr
 	CustomLog /dev/stdout combined
