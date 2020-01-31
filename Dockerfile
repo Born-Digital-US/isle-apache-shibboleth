@@ -76,7 +76,7 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     python-mysqldb \
     libxml2-dev \
     libapache2-mod-php7.1 \
-    libcurl3-openssl-dev \
+    libcurl4-openssl-dev \
     php7.1 \
     php7.1-cli \
     php7.1-json \
@@ -207,7 +207,7 @@ RUN BUILD_DEPS="build-essential \
     apt-get purge $BUILD_DEPS software-properties-common -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV COMPOSER_HASH=${COMPOSER_HASH:-76a7060ccb93902cd7576b67264ad91c8a2700e2} \    
+ENV COMPOSER_HASH=${COMPOSER_HASH:-6e5e46fc7cab0015d5961f54bb39be1f4b330093} \
     FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
