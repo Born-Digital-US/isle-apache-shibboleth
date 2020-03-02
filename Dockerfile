@@ -207,10 +207,13 @@ RUN BUILD_DEPS="build-essential \
     apt-get purge $BUILD_DEPS software-properties-common -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV COMPOSER_HASH=${COMPOSER_HASH:-6e5e46fc7cab0015d5961f54bb39be1f4b330093} \
+# Composer & FITS ENV
+# @see: Composer https://github.com/composer/getcomposer.org/commits/master replace hash below with most recent hash & FITS https://projects.iq.harvard.edu/fits/downloads
+ENV COMPOSER_HASH=${COMPOSER_HASH:-b9cc694e39b669376d7a033fb348324b945bce05} \
     FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
+# @see: Drush https://github.com/drush-ops/drush/tags
 RUN useradd --comment 'Islandora User' --no-create-home -d /var/www/html --system --uid $ISLANDORA_UID --user-group -s /bin/bash islandora && \
     chown -R islandora:www-data /var/www/html && \
     ## Temporary directory for composer, fits, etc...
