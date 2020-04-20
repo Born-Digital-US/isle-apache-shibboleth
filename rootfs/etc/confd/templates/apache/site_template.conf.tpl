@@ -37,7 +37,9 @@
 	ProxyPassReverse /iiif/2 http://image-services:8080/cantaloupe/iiif/2
 	ProxyPass /cantaloupe/iiif/2 http://image-services:8080/cantaloupe/iiif/2 nocanon
 	ProxyPassReverse /cantaloupe/iiif/2 http://image-services:8080/cantaloupe/iiif/2
-
+    ## New cantaloupe settings for testing April 2020
+    ProxyPassReverseCookiePath /cantaloupe/iiif/2 /iiif/2
+    ProxyPassReverseCookieDomain /cantaloupe/iiif/2 {{getv "/base/domain"}}
 	## Use internal routing for adore-djatoka requests.
 	RewriteEngine On
 	RewriteCond %{QUERY_STRING} (.*)(https|http)(?:[^%]|%[0-9A-Fa-f]{2})+(%2Fislandora.*)
