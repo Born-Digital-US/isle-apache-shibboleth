@@ -209,7 +209,7 @@ RUN BUILD_DEPS="build-essential \
 
 # Composer & FITS ENV
 # @see: Composer https://github.com/composer/getcomposer.org/commits/master replace hash below with most recent hash & FITS https://projects.iq.harvard.edu/fits/downloads
-ENV COMPOSER_HASH=${COMPOSER_HASH:-b9cc694e39b669376d7a033fb348324b945bce05} \
+ENV COMPOSER_HASH=${COMPOSER_HASH:-dd82de6ec1fedb6df56ed1790ce7f8bbbaf802d8} \
     FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
