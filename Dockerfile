@@ -209,7 +209,7 @@ RUN BUILD_DEPS="build-essential \
 
 # Composer & FITS ENV
 # @see: Composer https://github.com/composer/getcomposer.org/commits/master replace hash below with most recent hash & FITS https://projects.iq.harvard.edu/fits/downloads
-ENV COMPOSER_HASH=${COMPOSER_HASH:-dd82de6ec1fedb6df56ed1790ce7f8bbbaf802d8} \
+ENV COMPOSER_HASH=${COMPOSER_HASH:-4d7f8d40f9788de07c7f7b8946f340bf89535453} \
     FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
@@ -282,8 +282,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       traefik.frontend.entryPoints=http,https
 
 COPY rootfs /
-
-VOLUME /var/www/html
 
 EXPOSE 80
 
