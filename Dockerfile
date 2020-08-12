@@ -39,7 +39,7 @@ RUN GEN_DEP_PACKS="software-properties-common \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ## S6-Overlay @see: https://github.com/just-containers/s6-overlay
-ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-1.22.1.0}
+ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-2.0.0.1}
 ADD https://github.com/just-containers/s6-overlay/releases/download/v$S6_OVERLAY_VERSION/s6-overlay-amd64.tar.gz /tmp/
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
     rm /tmp/s6-overlay-amd64.tar.gz
@@ -209,7 +209,7 @@ RUN BUILD_DEPS="build-essential \
 
 # Composer & FITS ENV
 # @see: Composer https://github.com/composer/getcomposer.org/commits/master replace hash below with most recent hash & FITS https://projects.iq.harvard.edu/fits/downloads
-ENV COMPOSER_HASH=${COMPOSER_HASH:-4d7f8d40f9788de07c7f7b8946f340bf89535453} \
+ENV COMPOSER_HASH=${COMPOSER_HASH:-ed106feacef086c1fe511f535ad3988d383493d9} \
     FITS_VERSION=${FITS_VERSION:-1.5.0}
 
 ## Let's go!  Finalize all remaining: djatoka, composer, drush, fits.
