@@ -39,7 +39,7 @@ RUN GEN_DEP_PACKS="software-properties-common \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ## S6-Overlay @see: https://github.com/just-containers/s6-overlay
-ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-2.0.0.1}
+ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-2.1.0.0}
 ADD https://github.com/just-containers/s6-overlay/releases/download/v$S6_OVERLAY_VERSION/s6-overlay-amd64.tar.gz /tmp/
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / && \
     rm /tmp/s6-overlay-amd64.tar.gz
