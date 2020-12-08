@@ -71,10 +71,8 @@ RUN add-apt-repository -y ppa:ondrej/apache2 && \
     libavcodec-extra \
     lame \
     ghostscript \
-    xpdf \
     poppler-utils" && \
     APACHE_PACKS="apache2 \
-    python-mysqldb \
     libxml2-dev \
     libapache2-mod-php7.1 \
     libcurl4-openssl-dev \
