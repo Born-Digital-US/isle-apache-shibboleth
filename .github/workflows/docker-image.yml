@@ -1,16 +1,15 @@
 # using https://github.com/marketplace/actions/build-and-push-docker-images
-# Born-Digital Github Actions for ISLE Releases
-
-name: ci
-
-# For BD only see branches are ISLE-v.*-dev only e.g. ISLE-v.1.5.3-dev
+# Github Actions for ISLE Releases
+# For ISLE Docker Images releases and testing, branches are ISLE-v.*-dev only e.g. ISLE-v.1.5.3-dev or ISLE-v.1.5.3
 # ISLE branches should only be master and latest
-# This will result in the image {{ IMAGE_REPO_ORG }}/isle-tomcat:ISLE-v.1.5.3-dev
+
+name: ga-ci
+
 on:
   push:
-    branches: [ ISLE-v.*-dev ]
+    branches: [ ISLE-v.* ]
   pull_request:
-    branches: [ ISLE-v.*-dev ]
+    branches: [ ISLE-v.* ]
 
 jobs:
   main:
@@ -42,7 +41,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: borndigital/isle-apache:1.5.3-dev
+          tags: |
+            ${{ secrets.DOCKERHUB_ORG }}/isle-apache:1.5.3
+            ${{ secrets.DOCKERHUB_ORG }}/isle-apache:latest    
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
