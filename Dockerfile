@@ -40,7 +40,7 @@ RUN GEN_DEP_PACKS="software-properties-common \
 
 ## S6-Overlay
 # @see: https://github.com/just-containers/s6-overlay
-ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-2.1.0.2}
+ENV S6_OVERLAY_VERSION=${S6_OVERLAY_VERSION:-2.1.0.2} \
 ADD https://github.com/just-containers/s6-overlay/releases/download/v$S6_OVERLAY_VERSION/s6-overlay-amd64-installer /tmp/
 RUN chmod +x /tmp/s6-overlay-amd64-installer && \
     /tmp/s6-overlay-amd64-installer /
@@ -55,11 +55,13 @@ RUN touch /var/log/cron.log && \
     echo "0 */12 * * * root /usr/sbin/tmpreaper -am 4d /tmp >> /var/log/cron.log 2>&1" | tee /etc/cron.d/tmpreaper-cron && \
     chmod 0644 /etc/cron.d/tmpreaper-cron
 
+# @see: ImageMagick https://github.com/ImageMagick/ImageMagick/releases
 ENV PATH=$PATH:$HOME/.composer/vendor/bin \
     KAKADU_HOME=/usr/local/adore-djatoka-1.1/bin/Linux-x86-64 \
     KAKADU_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64 \
     LD_LIBRARY_PATH=/usr/local/adore-djatoka-1.1/lib/Linux-x86-64:/usr/local/lib:$LD_LIBRARY_PATH \
-    COMPOSER_ALLOW_SUPERUSER=1
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    IMAGEMAGICK_VERSION=${IMAGEMAGICK_VERSION:-7.0.10-51}
 
 ## Apache, PHP, FFMPEG, and other Islandora Depends.
 ## Apache && PHP 7.1 from ondrej PPA
@@ -184,9 +186,9 @@ RUN BUILD_DEPS="build-essential \
     ldconfig && \
     ## ImageMagick latest
     cd /tmp && \
-    curl -O -L https://www.imagemagick.org/download/ImageMagick.tar.gz && \
-    tar xf ImageMagick.tar.gz && \
-    cd ImageMagick-* && \
+    curl -O -L https://github.com/ImageMagick/ImageMagick/archive/$IMAGEMAGICK_VERSION.tar.gz && \
+    tar xf $IMAGEMAGICK_VERSION.tar.gz && \
+    cd ImageMagick-$IMAGEMAGICK_VERSION && \
     ./configure --enable-hdri --with-quantum-depth=16 --without-magick-plus-plus --without-perl --with-rsvg && \
     make && \
     make install && \
