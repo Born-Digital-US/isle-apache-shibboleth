@@ -1,15 +1,14 @@
 # using https://github.com/marketplace/actions/build-and-push-docker-images
 # Github Actions for ISLE Releases
-# For ISLE Docker Images releases and testing, branches are ISLE-v.*-dev only e.g. ISLE-v.1.5.3-dev or ISLE-v.1.5.3
-# ISLE branches should only be master and latest
+
 
 name: ga-ci
 
 on:
   push:
-    branches: [ ISLE-v.* ]
+    branches: [ ISLE-* ]
   pull_request:
-    branches: [ ISLE-v.* ]
+    branches: [ ISLE-* ]
 
 jobs:
   main:
