@@ -6,9 +6,9 @@ name: ga-ci
 
 on:
   push:
-    branches: [ ISLE-* ]
+    branches: [ main ]
   pull_request:
-    branches: [ ISLE-* ]
+    branches: [ main ]
 
 jobs:
   main:
@@ -42,6 +42,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_ORG }}/isle-apache:1.5.3
+            ${{ secrets.DOCKERHUB_ORG }}/isle-apache:1.5.3.shib
             ${{ secrets.DOCKERHUB_ORG }}/isle-apache:latest
       -
         name: Image digest
