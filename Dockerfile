@@ -1,7 +1,7 @@
 FROM islandoracollabgroup/isle-apache:1.5.6
 
-RUN curl --fail --remote-name https://pkg.switch.ch/switchaai/ubuntu/dists/focal/main/binary-all/misc/switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb && \
-    apt install ./switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb && \
+RUN curl --fail --remote-name 'https://pkg.switch.ch/switchaai/ubuntu/dists/focal/main/binary-all/misc/switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb' && \
+    apt install './switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb' && \
     SHIBB_PACKS="shibboleth \
     libapache2-mod-shib2" && \ 
     apt-get update && \
@@ -13,7 +13,7 @@ RUN curl --fail --remote-name https://pkg.switch.ch/switchaai/ubuntu/dists/focal
     apt-get clean && \
     service shibd stop && \
     mkdir -p /var/run/shibboleth && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* '/switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb'
 
 ARG BUILD_DATE
 ARG VCS_REF
