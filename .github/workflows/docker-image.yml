@@ -41,7 +41,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_ORG }}/isle-apache:1.5.6.shib
+            ${{ secrets.DOCKERHUB_ORG }}/isle-apache:1.5.7.shib
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
