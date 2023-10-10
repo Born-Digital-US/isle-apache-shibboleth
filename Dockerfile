@@ -1,4 +1,4 @@
-FROM islandoracollabgroup/isle-apache:1.5.26
+FROM islandoracollabgroup/isle-apache:1.5.27
 
 RUN curl --fail --remote-name 'https://pkg.switch.ch/switchaai/ubuntu/dists/focal/main/binary-all/misc/switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb' && \
     apt install './switchaai-apt-source_1.0.0~ubuntu20.04.1_all.deb' && \
